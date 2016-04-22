@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8" ?>  
+<taglib 
+xmlns="http://java.sun.com/xml/j2ee" 
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee/web-jsptaglibrary_2_0.xsd"> 
+<tlibversion>1.0</tlibversion>
+<jspversion>1.1</jspversion>
+<shortname>sf</shortname>
+<uri>/sf</uri> 
+<info>个人标签</info>
+<tag>
+	<name>page</name><!-- 分页标签，用来生成html -->
+      <tagclass>com.sf.qzm.jspTag.PageTag</tagclass>
+      <bodycontent>scriptless</bodycontent>
+      <info>输出</info>
+      
+      <attribute>
+       <name>pageSize</name>
+       <required>true</required>
+       <rtexprvalue>true</rtexprvalue>
+      </attribute>
+      
+      <attribute>
+       <name>pageIndex</name>
+       <required>true</required>
+       <rtexprvalue>true</rtexprvalue>
+      </attribute>
+      
+      <attribute>
+       <name>totalPage</name>
+       <required>true</required>
+       <rtexprvalue>true</rtexprvalue>
+      </attribute>
+      <attribute>
+       <name>count</name>
+       <required>true</required>
+       <rtexprvalue>true</rtexprvalue>
+      </attribute>
+</tag>
+<tag>
+	<name>trim</name><!-- 文字字节限制标签 -->
+      <tagclass>com.sf.qzm.jspTag.StringTrimTag</tagclass>
+      <bodycontent>scriptless</bodycontent>
+      <info>输出</info>
+      
+      <attribute>
+       <name>content</name>
+       <required>true</required>
+       <rtexprvalue>true</rtexprvalue>
+      </attribute>
+      <attribute>
+       <name>length</name>
+       <required>true</required>
+      </attribute>
+</tag>
+<tag>
+	<name>power</name><!-- 后台权限控制按钮显示标签 -->
+      <tagclass>com.sf.qzm.jspTag.PowerTag</tagclass>
+      <bodycontent>jsp</bodycontent>
+      <info>输出</info>
+      
+      <attribute>
+       <name>uri</name><!-- 根据uri匹配权限 -->
+       <required>false</required>
+       <rtexprvalue>true</rtexprvalue>
+      </attribute>
+      <attribute>
+       <name>roleId</name><!-- 根据角色匹配权限 -->
+       <required>false</required>
+       <rtexprvalue>true</rtexprvalue>
+      </attribute>
+      
+</tag>
+<tag>
+	<name>phone</name><!-- 后台权限控制按钮显示标签 -->
+      <tagclass>com.qicai.jspTag.PowerTagPhone</tagclass>
+      <bodycontent>scriptless</bodycontent>
+      <info>输出</info>
+    
+      <attribute>
+       <name>roleId</name><!-- 根据角色匹配权限 -->
+       <required>false</required>
+       <rtexprvalue>true</rtexprvalue>
+      </attribute>
+      
+       <attribute>
+       <name>phone</name>
+       <required>true</required>
+       <rtexprvalue>true</rtexprvalue>
+      </attribute>
+      
+</tag>
+</taglib>
