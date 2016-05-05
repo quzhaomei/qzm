@@ -13,17 +13,22 @@ import javax.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.sf.qzm.annotation.ClassLimit;
 import com.sf.qzm.bean.admin.AdminUser;
 import com.sf.qzm.controller.BaseController;
+import com.sf.qzm.dto.ImgUploadResultDTO;
 import com.sf.qzm.dto.JsonDTO;
 import com.sf.qzm.dto.admin.AdminUserDTO;
 import com.sf.qzm.dto.admin.MenuManagerDTO;
 import com.sf.qzm.service.AdminUserService;
 import com.sf.qzm.service.MenuManagerService;
 import com.sf.qzm.util.context.SfContextUtils;
+import com.sf.qzm.util.other.ImgUtil;
+import com.sf.qzm.util.other.JsonUtils;
 import com.sf.qzm.util.other.PasswordUtils;
 
 @Controller
@@ -100,6 +105,15 @@ public class WelcomeController extends BaseController {
 			model.addAttribute("pageMenus", menus);
 		}
 		return "admin/menu";
+	}
+	
+	// 上传图片
+	@RequestMapping(value = "/uploadImg")
+	public  String uploadImg(
+			@RequestParam(value = "imgFile") MultipartFile file,Model model) {
+		ImgUploadResultDTO result=ImgUtil.saveFile(file, true, "sysLogo");
+		model.addAttribute("json", JsonUtils.object2json(result));
+		return "json";
 	}
 	
 }

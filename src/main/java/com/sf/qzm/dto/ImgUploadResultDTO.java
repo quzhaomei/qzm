@@ -6,6 +6,8 @@ package com.sf.qzm.dto;
  *
  */
 public class ImgUploadResultDTO implements SfDto {
+	public static final Integer FAIL=1;
+	public static final Integer SUCCESS=0;
 	/**
 	 * 图片上传是否失败。0-成功，1-失败
 	 */

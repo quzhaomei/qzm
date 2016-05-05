@@ -29,4 +29,24 @@
 		<property name="maxUploadSize" value="${img.maxsize}"></property>
 	</bean>
 	
+	 <!-- 定义目标bean和bean中的方法   -->
+	<bean id="SpringQtzJobMethod" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">  
+		<property ref="springQzt" name="targetObject"></property>
+		<property name="targetMethod" value="execute"></property>
+	</bean>
+	<!-- ======================== 调度触发器 ======================== -->  
+	<bean id="CronTriggerBean" class="org.springframework.scheduling.quartz.CronTriggerBean">  
+		   <property name="jobDetail" ref="SpringQtzJobMethod"></property>  
+		   <property name="cronExpression" value="0 0/1 14 * * ?"></property>  
+	</bean> 
+
+	<!-- 定时器 调度工厂
+	<bean id="SpringJobSchedulerFactoryBean" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">  
+    <property name="triggers">  
+        <list>  
+            <ref bean="CronTriggerBean"/>  
+        </list>  
+    </property>  
+	</bean>  --> 
+	
 </beans>

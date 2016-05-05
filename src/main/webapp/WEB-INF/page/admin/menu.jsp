@@ -3,7 +3,7 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn"%>
 <%@ page language="java" import="java.util.*" pageEncoding="utf-8"%>
 <%
-	String server=SfContextUtils.getRootUrl(request);
+	String server=SfContextUtils.getContentRootUrl(request);
 	request.setAttribute("host", server);
 %>
 <div id="sidebar-left" class="span2">

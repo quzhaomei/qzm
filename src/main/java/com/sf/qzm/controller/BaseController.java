@@ -5,6 +5,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Controller;
 
 import com.sf.qzm.dto.admin.AdminUserDTO;
+import com.sf.qzm.socket.entity.UserInfo;
 import com.sf.qzm.util.other.Constant;
 
 /**
@@ -34,24 +35,18 @@ public class BaseController {
 	}
 	
 	
-	/**
-	 * 例如 http://www.exasd.cn/{contentPath}/log.html. 
-	 * 最后处理返回 <p>http://www.exasd.cn/{contentPath}</p>
-	 * <b>contentPath</b> 为当前项目的上下文路径，没有则为空格
-	 * <br/>
-	 * @param request 当前请求的request
-	 * @return http 请求的根路径
-	 */
-	protected String getRootUrl(HttpServletRequest request){
-		String host=request.getRequestURL().toString();
-		while(host.lastIndexOf("/")>7){
-			host=host.substring(0,host.lastIndexOf("/"));
-		}
-		String contextPath=request.getContextPath();
-		if(!"".equals(contextPath)){
-			host=host+contextPath;
-		}
-		return host;
+	
+	protected void setFromUser(HttpServletRequest request,UserInfo user){
+		request.getSession().setAttribute(Constant.FROM_USER, user);
+	}
+	protected void setToUser(HttpServletRequest request,UserInfo user){
+		request.getSession().setAttribute(Constant.TO_USER, user);
 	}
 	
+	protected UserInfo getFromUser(HttpServletRequest request){
+		return (UserInfo) request.getSession().getAttribute(Constant.FROM_USER);
+	}
+	protected UserInfo getToUser(HttpServletRequest request){
+		return (UserInfo) request.getSession().getAttribute(Constant.TO_USER);
+	}
 }

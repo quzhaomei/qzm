@@ -16,9 +16,14 @@ public class Constant {
 	public static final String  CHECK="check";
 	public static final String  RESET="reset";
 	public static final String  FIND_BY_ID="findById";
+	public static final String  FROM_USER="fromUser";
+	public static final String  TO_USER="toUser";
 	
 	public static final String  ADMIN_USER_SESSION="adminUserSession";
 	public static final String  USER_SESSION="userSession";
 	public static final String  LOGIN_TAG="loginTag";
 	public static final String  AJAX="ajax";
+	
+	public static final String IMG_ROOT_KEY="img_path";
+	public static final String SOCKET_PORT="socketPort";
 }

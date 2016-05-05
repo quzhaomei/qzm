@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sf.qzm.dao.CooperationDao">
+ <cache eviction="LRU" flushInterval="60000" size="1024" readOnly="true" /> 
+	<resultMap type="com.sf.qzm.dto.bis.CooperationDTO" id="cooperationDTO">
+		<id property="cooperationId" column="cooperationId" />
+		<result property="code" column="code" />
+		<result property="name" column="name" />
+		<result property="status" column="status" />
+		<result property="description" column="description" />
+		<result property="createDate" column="createDate" />
+	</resultMap>
+	<insert id="save"  useGeneratedKeys="true" keyProperty="cooperation.cooperationId">
+		insert into cooperation(`cooperationId`,`code`,`name`,`status`,`createDate`,`description`)
+		values
+		(#{cooperation.cooperationId},
+		#{cooperation.code},#{cooperation.name},#{cooperation.status}
+		,#{cooperation.createDate},#{cooperation.description})
+	</insert>
+	<update id="update">
+		update cooperation set cooperationId=#{cooperation.cooperationId}
+		<if test="cooperation.code!=null">
+			,`code`=#{cooperation.code}
+		</if>
+		<if test="cooperation.name!=null">
+			,`name`=#{cooperation.name}
+		</if>
+		<if test="cooperation.status!=null">
+			,`status`=#{cooperation.status}
+		</if>
+		<if test="cooperation.description!=null">
+			,`description`=#{cooperation.description}
+		</if>
+		where cooperationId=#{cooperation.cooperationId};
+	</update>
+	<delete id="delete">
+		delete from cooperation where 1=1
+		<if test="cooperation.cooperationId!=null">
+			and cooperationId=#{cooperation.cooperationId}
+		</if>
+	</delete>
+	<select id="getListByParam" resultMap="cooperationDTO">
+		select `cooperationId`,`code`,`name`,`status`,`createDate`,`description`
+		 from cooperation where 1=1
+	</select>
+	<select id="getByParam" resultMap="cooperationDTO">
+		select `cooperationId`,`code`,`name`,`status`,`createDate`,`description`
+		 from cooperation where 1=1
+		<if test="cooperation.cooperationId!=null">
+			and `cooperationId`=#{cooperation.cooperationId}
+		</if>
+		<if test="cooperation.code!=null">
+			and `code`=#{cooperation.code}
+		</if>
+	</select>
+	<select id="getCountByParam" resultType="int"></select>
+</mapper>  

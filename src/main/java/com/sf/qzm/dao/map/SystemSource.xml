@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sf.qzm.dao.SystemSourceDao">
+ <cache eviction="LRU" flushInterval="60000" size="1024" readOnly="true" /> 
+	<resultMap type="com.sf.qzm.dto.bis.SystemSourceDTO" id="sourceDTO">
+		<id property="sourceId" column="sourceId" />
+		<result property="key" column="key" />
+		<result property="value" column="value" />
+		<result property="type" column="type" />
+		<result property="description" column="description" />
+		<result property="createDate" column="createDate" />
+	</resultMap>
+	<insert id="save"  useGeneratedKeys="true" keyProperty="source.sourceId">
+		insert into system_source(`sourceId`,`key`,`value`,`type`,`createDate`,`description`)
+		values
+		(#{source.sourceId},
+		#{source.key},#{source.value},#{source.type},#{source.createDate},#{source.description})
+	</insert>
+	<update id="update">
+		update system_source set sourceId=#{source.sourceId}
+		<if test="source.key!=null">
+			,`key`=#{source.key}
+		</if>
+		<if test="source.value!=null">
+			,`value`=#{source.value}
+		</if>
+		<if test="source.description!=null">
+			,`description`=#{source.description}
+		</if>
+		where sourceId=#{source.sourceId};
+	</update>
+	<delete id="delete">
+		delete from system_source where 1=1
+		<if test="source.sourceId!=null">
+			and sourceId=#{source.sourceId}
+		</if>
+	</delete>
+	<select id="getListByParam" resultMap="sourceDTO">
+		select `sourceId`,`key`,`value`,`type`,`createDate`,`description`
+		 from system_source where 1=1
+	</select>
+	<select id="getByParam" resultMap="sourceDTO">
+		select `sourceId`,`key`,`value`,`type`,`createDate`,`description`
+		 from system_source where 1=1
+		<if test="source.sourceId!=null">
+			and `sourceId`=#{source.sourceId}
+		</if>
+		<if test="source.key!=null">
+			and `key`=#{source.key}
+		</if>
+	</select>
+	<select id="getCountByParam" resultType="int"></select>
+</mapper>  

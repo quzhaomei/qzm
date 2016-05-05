@@ -199,6 +199,29 @@
 			<artifactId>commons-logging</artifactId>
 			<version>1.2</version>
 		</dependency>
+		
+		
+		<!-- websocket -->
+		<dependency>
+			<groupId>com.corundumstudio.socketio</groupId>
+			<artifactId>netty-socketio</artifactId>
+			<version>1.7.10</version>
+		</dependency>
+		
+		<!-- email -->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-email</artifactId>
+			<version>1.4</version>
+		</dependency>
+		
+		<!-- 定时器 -->
+		<dependency>  
+            <groupId>org.quartz-scheduler</groupId>  
+            <artifactId>quartz</artifactId>  
+            <version>1.8.5</version>  
+        </dependency>
+
 	</dependencies>
 	<build>
 		<finalName>qzm</finalName>
