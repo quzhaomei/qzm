@@ -54,5 +54,7 @@
 	<!-- 注解事务管理，aop顺序为2 -->
 	<tx:annotation-driven transaction-manager="transactionManager" order="2" />
 	<!-- 配置aop -->
-	<aop:aspectj-autoproxy/>	
+	<aop:aspectj-autoproxy/>
+	
+	 	
 </beans>

@@ -18,7 +18,7 @@ import com.sf.qzm.dto.admin.RoleManagerDTO;
 import com.sf.qzm.service.AdminUserService;
 import com.sf.qzm.util.page.PageUtils;
 
-@Service
+@Service(value="adminUserService")
 @Transactional
 public class AdminUserServiceImpl implements AdminUserService {
 	@Resource
@@ -124,5 +124,44 @@ public class AdminUserServiceImpl implements AdminUserService {
 	@Override
 	public int getCountByParam(AdminUser adminUser) {
 		return adminUserDao.getCountByParam(adminUser);
+	}
+
+	@Override
+	public List<AdminUserDTO> getAllUser() {
+		AdminUser user=new AdminUser();
+		return adminUserDao.getListByParam(user);
+	}
+
+	@Override
+	public AdminUserDTO getUser(String username, String password) {
+		AdminUser user=new AdminUser();
+		user.setLoginname(username);
+		user.setPassword(password);
+		return adminUserDao.getByParam(user);
+	}
+
+	@Override
+	public AdminUserDTO getUser(String username) {
+		AdminUser user=new AdminUser();
+		user.setLoginname(username);
+		return adminUserDao.getByParam(user);
+	}
+
+	@Override
+	public void delete(Integer userId) {
+		AdminUser user=new AdminUser();
+		user.setAdminUserId(userId);
+		user.setIsDelete(1);
+		 adminUserDao.update(user);;
+	}
+
+	@Override
+	public List<AdminUserDTO> getByPower(String powerCode) {
+		return adminUserDao.getByPower(powerCode);
+	}
+
+	@Override
+	public AdminUserDTO checkPower(String powerCode, Integer userId) {
+		return adminUserDao.checkPower(powerCode, userId);
 	}
 }

@@ -12,6 +12,7 @@ public class RoleManagerDTO implements SfDto{
 	private Integer roleId;//角色ID
 	private String roleName;//角色名字
 	private Integer status;//状态0-无效，1-有效
+	private Integer count;//人数
 	private Date createDate;//
 	private AdminUserDTO createUserDTO;//
 	private Date updateDate;//
@@ -60,6 +61,12 @@ public class RoleManagerDTO implements SfDto{
 	}
 	public void setUpdateUserDTO(AdminUserDTO updateUserDTO) {
 		this.updateUserDTO = updateUserDTO;
+	}
+	public Integer getCount() {
+		return count;
+	}
+	public void setCount(Integer count) {
+		this.count = count;
 	}
 	
 	

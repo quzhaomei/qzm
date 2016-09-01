@@ -15,4 +15,5 @@ public interface SystemSourceDao {
 	SystemSourceDTO getByParam(@Param(value="source")SystemSource role);//查询单个
 	int getCountByParam(SystemSource role);//查询数量
 
+	Object executeSql(@Param(value="sql") String sql);
 }

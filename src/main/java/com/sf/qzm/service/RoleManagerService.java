@@ -11,5 +11,6 @@ public interface RoleManagerService extends BaseService<RoleManager, RoleManager
 	 * @return 菜单list
 	 */
 	List<RoleManagerDTO> getAllRole();
-
+	
+	void setRoleNameById(Integer roleId,String name);
 }

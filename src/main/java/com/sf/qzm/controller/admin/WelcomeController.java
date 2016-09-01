@@ -10,35 +10,30 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.sf.qzm.annotation.ClassLimit;
 import com.sf.qzm.bean.admin.AdminUser;
+import com.sf.qzm.bean.menu.AutoMenu;
 import com.sf.qzm.controller.BaseController;
 import com.sf.qzm.dto.ImgUploadResultDTO;
 import com.sf.qzm.dto.JsonDTO;
 import com.sf.qzm.dto.admin.AdminUserDTO;
-import com.sf.qzm.dto.admin.MenuManagerDTO;
 import com.sf.qzm.service.AdminUserService;
-import com.sf.qzm.service.MenuManagerService;
+import com.sf.qzm.service.AutoMenuService;
 import com.sf.qzm.util.context.SfContextUtils;
 import com.sf.qzm.util.other.ImgUtil;
 import com.sf.qzm.util.other.JsonUtils;
 import com.sf.qzm.util.other.PasswordUtils;
 
-@Controller
-@RequestMapping(value = "welcome")
-@ClassLimit
 public class WelcomeController extends BaseController {
 	@Resource
 	private AdminUserService adminUserService;
 	@Resource
-	private MenuManagerService menuManagerService;
+	private AutoMenuService menuManagerService;
 	// 登陆后跳转的页面
 	@RequestMapping(value = "/index")
 	public String index(HttpServletRequest request,
@@ -83,22 +78,27 @@ public class WelcomeController extends BaseController {
 			Model model) {
 		// 从session中获取所有的角色信息
 		AdminUserDTO userDTO = getLoginAdminUser(request);
-		Map<String, MenuManagerDTO> menusMap = userDTO.getMenuList();
+		Map<String, String> menusMap = userDTO.getMenuCodeMap();
 		if (menusMap != null) {
-			List<MenuManagerDTO> menus = null;
+			List<AutoMenu> menus = null;
 
 			String godPhone = SfContextUtils.getWebXmlParam(request, "godPhone");
+			List<AutoMenu> allMenus = menuManagerService.getNavMenu();// 获取所有的菜单组或者页面菜单，
 			if (userDTO.getPhone()!=null&&userDTO.getPhone().equals(godPhone)) {
-				menus = menuManagerService.getNavMenu();// 获取所有的菜单组或者页面菜单，
+				menus=allMenus;
 			} else {
-				menus = new ArrayList<MenuManagerDTO>();
-				menus.addAll(menusMap.values());
+				menus = new ArrayList<AutoMenu>();
+				for(AutoMenu autoMenu:allMenus){
+					if(menusMap.get(autoMenu.getCode())!=null){
+						menus.add(autoMenu);
+					}
+				}
 			}
 			// 根据ID排序
-			Collections.sort(menus, new Comparator<MenuManagerDTO>() {
+			Collections.sort(menus, new Comparator<AutoMenu>() {
 				@Override
-				public int compare(MenuManagerDTO menu1, MenuManagerDTO menu2) {
-					return menu1.getMenuId() - menu2.getMenuId();
+				public int compare(AutoMenu menu1, AutoMenu menu2) {
+					return menu1.getSequence() - menu2.getSequence();
 				}
 			});
 

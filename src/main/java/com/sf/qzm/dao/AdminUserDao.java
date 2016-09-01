@@ -26,5 +26,8 @@ public interface AdminUserDao {
 	List<AdminUserDTO> getListByParamAndRole(@Param("user")AdminUser user,
 			@Param("roleId")Integer roleId);//查询数组
 	
-	
+	 List<AdminUserDTO> getByPower(@Param("powerCode")String powerCode) ;
+	 
+	 AdminUserDTO checkPower(@Param("powerCode")String powerCode,
+			 @Param("adminUserId") Integer adminUserId);
 }

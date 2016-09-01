@@ -1,18 +1,28 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!doctype html>
 <html>
+<head>
+<title>react.js</title>
+<style type="text/css">
+table{width:50%;}
+</style>
+</head>
 <body>
-<h2>Hello World!</h2>
-<button id="btn">sd</button>
-<script type="text/javascript" src="js/jquery-1.9.1.min.js"></script>
-<script type="text/javascript">
-$("#btn").on("click",function(){
-	alert("a");
-	return;
-})
+<div id="example"></div>
 
-$("#btn").unbind("click").on("click",function(){
-	alert("b");
-	return;
-})
+<script type="text/javascript" src="js/jquery-1.9.1.min.js"></script>
+<script type="text/javascript" src="js/react/react.min.js"></script>
+<!---->
+<script type="text/javascript" src="js/react/react-dom.min.js"></script>
+
+<script type="text/javascript" src="js/jquery-react.js?dxccxsd"></script>
+<script src="js/react/browser.min.js"></script>
+
+<script type="text/javascript">
+$(function(){
+	$("#example").render("LeftNav");
+});
 </script>
 </body>
 </html>

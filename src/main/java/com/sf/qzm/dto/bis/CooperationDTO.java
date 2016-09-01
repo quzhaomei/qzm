@@ -13,7 +13,7 @@ public class CooperationDTO {
 	private String description;//描述
 	private Integer status;//状态
 	private Date createDate;//
-	
+	private String logo;
 	public Integer getCooperationId() {
 		return cooperationId;
 	}
@@ -49,6 +49,12 @@ public class CooperationDTO {
 	}
 	public void setCreateDate(Date createDate) {
 		this.createDate = createDate;
+	}
+	public String getLogo() {
+		return logo;
+	}
+	public void setLogo(String logo) {
+		this.logo = logo;
 	}
 	
 }

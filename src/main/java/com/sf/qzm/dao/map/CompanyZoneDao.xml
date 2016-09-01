@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sf.qzm.dao.CompanyZoneDao">
+<cache eviction="LRU" flushInterval="60000" size="1024" readOnly="true"/>
+<resultMap type="com.sf.qzm.dto.biz.CompanyZoneDTO" id="companyZone">
+	<id property="id" column="id"/>
+	
+	<association property="company" column="companyId" javaType="com.sf.qzm.dto.biz.CompanyDTO">
+		<id property="companyId" column="companyId"/>
+		<result property="companyName" column="companyName"/>
+	</association>
+	<association property="zone" column="zoneId" javaType="com.sf.qzm.bean.constant.Zone" >
+			<id property="zoneId" column="zoneId" />
+			<result property="name" column="name" />
+		</association>
+</resultMap>
+
+<resultMap type="com.sf.qzm.bean.constant.Zone" id="zone">
+	<id property="zoneId" column="zoneId"/>
+	<result property="name" column="name" />
+	<result property="parentId" column="parentId" />
+	<result property="tempId" column="tempId" />
+</resultMap>
+
+	<insert id="save" >
+		insert into company_zone(companyId,zoneId)
+		values
+		(#{companyZone.companyId},#{companyZone.zoneId}})
+	</insert>
+	
+	<insert id="saveBatch">
+		<selectKey keyProperty="id" order="AFTER"  resultType="java.lang.Integer">  
+        SELECT LAST_INSERT_ID()  
+ 		 </selectKey> 
+		  insert into company_zone (companyId,zoneId)   
+	    values  
+	    <foreach collection="zoneIds"  item="zoneId" index="index" separator="," >  
+	        (#{companyId},#{zoneId})  
+	    </foreach>  
+	</insert>
+	
+	<delete id="delete">
+          delete from company_zone where 
+                  companyId=#{companyZone.companyId}
+                  and
+                  zoneId=#{companyZone.zoneId} 
+	</delete>
+	
+	<delete id="deleteBatch">
+          delete from company_zone where 
+                  companyId=#{companyId} 
+	</delete>
+	
+	<select id="getListByParam" resultMap="companyZone">
+		select cz.id,cz.companyId,cz.zoneId,
+		cz.companyName,z.name
+		from company_zone cz 
+		left join company c on c.companyId=cz.companyId
+		left join zone z on z.zoneId=cz.zoneId
+		where cz.companyId=#{companyId} 
+		order by cz.id
+	</select>
+	
+	<select id="listByCompany" resultMap="zone">
+		select c.zoneId,c.name,c.parentId,cz.id tempId
+		 from zone c 
+		 left join company_zone cz on c.zoneId=cz.zoneId and cz.companyId=#{companyId}
+		    where (c.isDelete=0 or c.isDelete is null) 
+		    <if test="zone.zoneId!=null">
+				and c.zoneId=#{zone.zoneId}
+			</if>
+			<if test="zone.name!=null">
+				and c.name=#{zone.name}
+			</if>
+		    <if test="zone.parentId!=null">
+				and c.parentId=#{zone.parentId}
+			</if>
+			order by c.zoneId 
+	</select>
+	<select id="rootByCompany" resultMap="zone">
+		select c.zoneId,c.name,c.parentId,cz.id tempId
+		 from zone c 
+		 left join company_zone cz on c.zoneId=cz.zoneId and cz.companyId=#{companyId}
+		    where (c.isDelete=0 or c.isDelete is null) 
+		    and c.parentId is null
+			order by c.zoneId 
+	</select>
+	
+	
+	
+</mapper>  

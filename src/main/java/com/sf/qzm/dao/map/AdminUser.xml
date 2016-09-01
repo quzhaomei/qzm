@@ -10,10 +10,6 @@
 		<result property="nickname" column="nickname" />
 		<result property="phone" column="phone" />
 		<result property="email" column="email" />
-		<result property="type" column="type" />
-
-		<result property="orinal" column="orinal" />
-		<result property="position" column="position" />
 		
 		<result property="description" column="description" />
 		
@@ -37,9 +33,9 @@
 	
 	<insert id="save" useGeneratedKeys="true" keyProperty="user.adminUserId">
 		insert into admin_user
-		(adminUserId,loginname,type,orinal,position,password,nickname,phone,email,description,createDate,createUserId,status)
+		(adminUserId,loginname,password,nickname,phone,email,description,createDate,createUserId,status)
 		values
-		(#{user.adminUserId},#{user.loginname},#{user.type},#{user.orinal},#{user.position},#{user.password},#{user.nickname},
+		(#{user.adminUserId},#{user.loginname},#{user.password},#{user.nickname},
 		#{user.phone},#{user.email},#{user.description},#{user.createDate},
 		#{user.createUserId},#{user.status})
 	</insert>
@@ -60,11 +56,11 @@
 		<if test="user.email!=null">
 		,email=#{user.email}
 		</if>
-		<if test="user.type!=null">
-		,type=#{user.type}
-		</if>
 		<if test="user.description!=null">
 		,description=#{user.description}
+		</if>
+		<if test="user.isDelete!=null">
+			,isDelete=#{user.isDelete}
 		</if>
 		<if test="user.updateUserId!=null">
 		,updateUserId=#{user.updateUserId}
@@ -79,7 +75,7 @@
 	</update>
 	<delete id="delete"></delete>
 	<select id="getListByPage" resultMap="userDTO"><!-- 查询后台用户 type==0 -->
-		select u.adminUserId,u.loginname,u.nickname,u.type,u.phone,
+		select u.adminUserId,u.loginname,u.nickname,u.phone,
 		u.createDate,u.updateDate,
 		u.email,u.description,u.status userStatus,
 		r.roleId,r.roleName,r.status
@@ -94,21 +90,60 @@
 				select temp.adminUserId from(
 				select adminUserId from admin_user u
 					where u.status!=0  
-					<if test="page.param.type!=null">
-					and u.type=#{page.param.type}
-					</if>
+					
 				limit ${page.pageSize*(page.pageIndex-1)},${page.pageSize}
 				)temp
 			)
 			
 			order by u.adminUserId
 	</select>
-	<select id="getByParam" resultMap="userDTO">
-		select u.adminUserId,u.loginname,u.nickname,u.password,u.type,u.phone,u.email,u.description,u.status userStatus,
+	
+	<select id="getListByParam" resultMap="userDTO">
+		select u.adminUserId,u.loginname,u.nickname,u.password,u.phone,u.email,
+		unix_timestamp(u.createDate)*1000 createDate,u.description,u.status userStatus,u.description,
 		r.roleId,r.roleName,r.status  from admin_user u 
 			left join user_to_role ur on ur.userId=u.adminUserId
 			left join role_manager r on r.roleId=ur.roleId
-			where  u.status!=0
+			where  (u.isDelete !=1 or u.isDelete is null) <!-- 排除已删除的 -->
+			<if test="user.loginname!=null">
+				and binary u.loginname=#{user.loginname}
+			</if>
+			<if test="user.password!=null">
+				and  u.password=#{user.password}
+			</if>
+			order by u.adminUserId
+	</select>
+	<select id="getByPower" resultMap="userDTO">
+		select u.adminUserId,u.loginname,u.nickname,u.password,u.phone,u.email,
+		unix_timestamp(u.createDate)*1000 createDate,u.description,u.status userStatus,u.description,
+		r.roleId,r.roleName,r.status  from admin_user u 
+			left join user_to_role ur on ur.userId=u.adminUserId
+			left join role_manager r on r.roleId=ur.roleId
+			left join role_to_menus rm on r.roleId=rm.roleId
+			left join auto_menu am on am.menuId=rm.menuId
+			where  (u.isDelete !=1 or u.isDelete is null) <!-- 排除已删除的 -->
+			and am.code=#{powerCode}
+			order by u.adminUserId
+	</select>
+	<select id="checkPower" resultMap="userDTO">
+		select u.adminUserId,u.loginname,u.nickname,u.password,u.phone,u.email,
+		unix_timestamp(u.createDate)*1000 createDate,u.description,u.status userStatus,u.description,
+		r.roleId,r.roleName,r.status  from admin_user u 
+			left join user_to_role ur on ur.userId=u.adminUserId
+			left join role_manager r on r.roleId=ur.roleId
+			left join role_to_menus rm on r.roleId=rm.roleId
+			left join auto_menu am on am.menuId=rm.menuId
+			where  (u.isDelete !=1 or u.isDelete is null) <!-- 排除已删除的 -->
+			and am.code=#{powerCode} and u.adminUserId=#{adminUserId}
+	</select>
+	
+	
+	<select id="getByParam" resultMap="userDTO">
+		select u.adminUserId,u.loginname,u.nickname,u.password,u.phone,u.email,u.description,u.status userStatus,
+		r.roleId,r.roleName,r.status  from admin_user u 
+			left join user_to_role ur on ur.userId=u.adminUserId
+			left join role_manager r on r.roleId=ur.roleId
+			where (u.isDelete !=1 or u.isDelete is null)
 			<if test="user.adminUserId!=null">
 				and u.adminUserId=#{user.adminUserId}
 			</if>
@@ -118,24 +153,15 @@
 			<if test="user.password!=null">
 				and  u.password=#{user.password}
 			</if>
-			<if test="user.type!=null">
-				and  u.type=#{user.type}
-			</if>
+			
 	</select>
 	<select id="mengHuLogin" resultMap="userDTO">
-		select u.adminUserId,u.loginname,u.nickname,u.password,u.type,u.phone,u.email,u.description,u.status userStatus,
+		select u.adminUserId,u.loginname,u.nickname,u.password,u.phone,u.email,u.description,u.status userStatus,
 		r.roleId,r.roleName,r.status  from admin_user u 
 			left join user_to_role ur on ur.userId=u.adminUserId
 			left join role_manager r on r.roleId=ur.roleId
-			where  u.status!=0 and
-				( u.loginname=#{user.loginname}
-			<if test="user.orinal==0"><!-- 个人可以用邮箱登陆 -->
-				or u.email=#{user.loginname}
-			</if>
-				)
-			<if test="user.orinal!=null"><!-- 个人可以用邮箱登陆 -->
+			where (u.isDelete !=1 or u.isDelete is null)
 				and u.orinal=#{user.orinal}
-			</if>
 	</select>
 	
 	<select id="getListByParamAndRole" resultMap="userDTO">
@@ -153,7 +179,7 @@
 	
 	<select id="getCountByParam" resultType="int">
 		select count(*) from admin_user u 
-			where u.status!=0  
+			where (u.isDelete !=1 or u.isDelete is null)
 			<if test="user.adminUserId!=null">
 				and adminUserId=#{user.adminUserId}
 			</if>
@@ -166,9 +192,7 @@
 			<if test="user.email!=null">
 				and email=#{user.email}
 			</if>
-			<if test="user.type!=null">
-				and type=#{user.type}
-			</if>
+			
 	</select>
 	<select id="checkUserCount" resultType="int">
 		select count(u.adminUserId) from admin_user u 
@@ -185,8 +209,6 @@
 			<if test="user.email!=null">
 				and email=#{user.email}
 			</if>
-			<if test="user.type!=null">
-				and type=#{user.type}
-			</if>
+	
 	</select>
 </mapper>  

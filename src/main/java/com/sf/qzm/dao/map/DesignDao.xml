@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sf.qzm.dao.DesignerDao">
+<cache eviction="LRU" flushInterval="60000" size="1024" readOnly="true"/>
+<resultMap type="com.sf.qzm.dto.biz.DesignerDTO" id="designer">
+	<id property="designerId" column="designerId"/>
+	<result property="name" column="name" />
+	<result property="phone" column="phone" />
+	<result property="companyName" column="companyName" />
+	<result property="accept" column="accept" />
+	<result property="createDate" column="createDate" />
+	<association property="manager" column="managerId" javaType="com.sf.qzm.dto.admin.AdminUserDTO">
+			<id property="adminUserId" column="managerId"/>
+			<result property="nickname" column="managerNickname"/>
+		</association>
+	<association property="createUser" column="createUserId" javaType="com.sf.qzm.dto.admin.AdminUserDTO">
+			<id property="adminUserId" column="createUserId"/>
+			<result property="nickname" column="createNickname"/>
+	</association>
+</resultMap>
+
+<resultMap type="com.sf.qzm.bean.constant.Zone" id="zone">
+	<id property="zoneId" column="zoneId"/>
+	<result property="name" column="name" />
+	<result property="parentId" column="parentId" />
+	<result property="tempId" column="tempId" />
+</resultMap>
+
+	<insert id="save" useGeneratedKeys="true" keyProperty="designer.designerId">
+		insert into designer(designerId,name,phone,companyName,
+		accept,createDate,managerId,createUserId)
+		values(#{designer.designerId},#{designer.name},#{designer.phone}
+		,#{designer.companyName},#{designer.accept},#{designer.createDate}
+		,#{designer.managerId},#{designer.createUserId})
+	</insert>
+	<update id="update">
+		update designer set designerId=#{designer.designerId}
+			<if test="designer.managerId!=null">
+				,managerId=#{designer.managerId}
+			</if>
+			<if test="designer.accept!=null">
+				,accept=#{designer.accept}
+			</if>
+			<if test="designer.companyName!=null">
+				,companyName=#{designer.companyName}
+			</if>
+			<if test="designer.phone!=null">
+				,phone=#{designer.phone}
+			</if>
+			<if test="designer.name!=null">
+				,name=#{designer.name}
+			</if>
+		where designerId=#{designer.designerId}
+	</update>
+	
+	<select id="get" resultMap="designer">
+		select c.designerId,c.name,c.phone,c.companyName,
+		c.accept,unix_timestamp(c.createDate)*1000 createDate,c.managerId,c.createUserId,
+		au.nickname createNickname,aus.nickname managerNickname
+		 from designer c
+		 left join admin_user au on au.adminUserId=c.createUserId
+		 left join admin_user aus on aus.adminUserId=c.managerId
+		    where 1=1
+		    <if test="designer.designerId!=null">
+				and c.designerId=#{designer.designerId}
+			</if>
+	</select>
+	<select id="list" resultMap="designer">
+			select c.designerId,c.name,c.phone,c.companyName,
+		c.accept,unix_timestamp(c.createDate)*1000 createDate,c.managerId,c.createUserId,
+		au.nickname createNickname,aus.nickname managerNickname
+		 from designer c
+		 left join admin_user au on au.adminUserId=c.createUserId
+		 left join admin_user aus on aus.adminUserId=c.managerId
+		    where 1=1
+		    <if test="designer.designerId!=null">
+				and c.designerId=#{designer.designerId}
+			</if>
+			order by c.designerId
+	</select>
+
+	<insert id="saveZoneBatch">
+		<selectKey keyProperty="id" order="AFTER"  resultType="java.lang.Integer">  
+        SELECT LAST_INSERT_ID()  
+ 		 </selectKey> 
+		  insert into designer_zone (designerId,zoneId)   
+	    values  
+	    <foreach collection="zoneIds"  item="zoneId" index="index" separator="," >  
+	        (#{designerId},#{zoneId})  
+	    </foreach>  
+	</insert>
+	
+	<delete id="deleteZone">
+          delete from designer_zone where 
+                  designerId=#{designerId} 
+	</delete>
+	
+	<select id="listByDesigner" resultMap="zone">
+		select c.zoneId,c.name,c.parentId,cz.id tempId
+		 from zone c 
+		 left join designer_zone cz on c.zoneId=cz.zoneId and cz.designerId=#{designerId}
+		    where (c.isDelete=0 or c.isDelete is null) 
+		    <if test="zone.parentId!=null">
+				and c.parentId=#{zone.parentId}
+			</if>
+			order by c.zoneId 
+	</select>
+	
+	<select id="rootByDesigner" resultMap="zone">
+		select c.zoneId,c.name,c.parentId,cz.id tempId
+		 from zone c 
+		 left join designer_zone cz on c.zoneId=cz.zoneId and cz.designerId=#{designerId}
+		    where (c.isDelete=0 or c.isDelete is null) 
+		    and c.parentId is null
+			order by c.zoneId 
+	</select>	
+	
+</mapper>  

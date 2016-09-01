@@ -2,8 +2,6 @@ package com.sf.qzm.controller;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.springframework.stereotype.Controller;
-
 import com.sf.qzm.dto.admin.AdminUserDTO;
 import com.sf.qzm.socket.entity.UserInfo;
 import com.sf.qzm.util.other.Constant;
@@ -13,7 +11,6 @@ import com.sf.qzm.util.other.Constant;
  * @author qzm
  * @since 2015-5-13
  */
-@Controller
 public class BaseController {
 	/**
 	 *  将登录用户 绑定在session中

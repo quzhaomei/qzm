@@ -53,6 +53,10 @@
 		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
 	</listener>
 	
+	<listener>
+		<listener-class>com.sf.qzm.util.context.LoginSessionListen</listener-class>
+	</listener>
+	
 	<!-- springMVC核心配置 -->
 	<servlet>
 		<servlet-name>spring</servlet-name>
@@ -71,6 +75,22 @@
 	<welcome-file-list>
 		<welcome-file>index.jsp</welcome-file>
 	</welcome-file-list>
+	
+	<servlet>
+		<servlet-name>testRest</servlet-name>
+		<servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
+		<init-param>
+	    <param-name>com.sun.jersey.config.property.packages</param-name>
+	    <param-value>com.sf.qzm.controller</param-value>
+	  </init-param>
+	</servlet>
+	
+	<servlet-mapping>
+	  <servlet-name>testRest</servlet-name>
+	  <url-pattern>/rest/*</url-pattern>
+	</servlet-mapping>
+	
+	
 	
 	<jsp-config>
 		<!-- 自定义标签 -->

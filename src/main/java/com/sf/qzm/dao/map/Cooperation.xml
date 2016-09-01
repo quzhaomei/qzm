@@ -7,14 +7,15 @@
 		<result property="code" column="code" />
 		<result property="name" column="name" />
 		<result property="status" column="status" />
+		<result property="logo" column="logo" />
 		<result property="description" column="description" />
 		<result property="createDate" column="createDate" />
 	</resultMap>
 	<insert id="save"  useGeneratedKeys="true" keyProperty="cooperation.cooperationId">
-		insert into cooperation(`cooperationId`,`code`,`name`,`status`,`createDate`,`description`)
+		insert into cooperation(`cooperationId`,`code`,`logo`,`name`,`status`,`createDate`,`description`)
 		values
 		(#{cooperation.cooperationId},
-		#{cooperation.code},#{cooperation.name},#{cooperation.status}
+		#{cooperation.code},#{cooperation.logo},#{cooperation.name},#{cooperation.status}
 		,#{cooperation.createDate},#{cooperation.description})
 	</insert>
 	<update id="update">
@@ -24,6 +25,9 @@
 		</if>
 		<if test="cooperation.name!=null">
 			,`name`=#{cooperation.name}
+		</if>
+		<if test="cooperation.logo!=null">
+			,`logo`=#{cooperation.logo}
 		</if>
 		<if test="cooperation.status!=null">
 			,`status`=#{cooperation.status}
@@ -40,11 +44,11 @@
 		</if>
 	</delete>
 	<select id="getListByParam" resultMap="cooperationDTO">
-		select `cooperationId`,`code`,`name`,`status`,`createDate`,`description`
+		select `cooperationId`,`code`,`name`,`status`,`createDate`,`description`,`logo`
 		 from cooperation where 1=1
 	</select>
 	<select id="getByParam" resultMap="cooperationDTO">
-		select `cooperationId`,`code`,`name`,`status`,`createDate`,`description`
+		select `cooperationId`,`code`,`name`,`status`,`createDate`,`description`,`logo`
 		 from cooperation where 1=1
 		<if test="cooperation.cooperationId!=null">
 			and `cooperationId`=#{cooperation.cooperationId}

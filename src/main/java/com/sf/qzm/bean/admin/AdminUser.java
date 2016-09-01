@@ -42,7 +42,7 @@ public class AdminUser implements SfBean {
 	private String email;
 
 	/**
-	 * 状态 0-删除，1-有效，2-冻结
+	 * 状态 0-冻结，1-有效，
 	 */
 	private Integer status;
 
@@ -73,21 +73,9 @@ public class AdminUser implements SfBean {
 	 */
 	private Integer updateUserId;
 
-	/**
-	 * 账户类型 0-普通帐号，1-管理帐号，管理账号通用，普通账号只能登陆前台
-	 */
-	private Integer type;
 
-	/**
-	 * 来源，0-个人，1-企业
-	 */
-	private Integer orinal;
 
-	/**
-	 * 公司地址 50
-	 */
-	private String position;
-
+	
 	/*辅助字段 －－－ start*/
 	
 	private List<Integer> roleIds;//角色id集合
@@ -106,33 +94,13 @@ public class AdminUser implements SfBean {
 	public static final int ORINAL_ENTERPRISE = 1;
 	/* 常数区域 －－－end */
 
-	public Integer getOrinal() {
-		return orinal;
-	}
-
-	public void setOrinal(Integer orinal) {
-		this.orinal = orinal;
-	}
-
-	public String getPosition() {
-		return position;
-	}
-
-	public void setPosition(String position) {
-		this.position = position;
-	}
+	
+	private Integer isDelete;//1是，0否
 
 	public Integer getCreateUserId() {
 		return createUserId;
 	}
 
-	public Integer getType() {
-		return type;
-	}
-
-	public void setType(Integer type) {
-		this.type = type;
-	}
 
 	public void setCreateUserId(Integer createUserId) {
 		this.createUserId = createUserId;
@@ -242,5 +210,15 @@ public class AdminUser implements SfBean {
 		this.roleId = roleId;
 	}
 
+
+	public Integer getIsDelete() {
+		return isDelete;
+	}
+
+
+	public void setIsDelete(Integer isDelete) {
+		this.isDelete = isDelete;
+	}
+	
 	
 }

@@ -28,5 +28,5 @@
 		<!-- <property name="resolveLazily" value="true"></property> -->
 		<property name="maxUploadSize" value="${img.maxsize}"></property>
 	</bean>
-	
+
 </beans>

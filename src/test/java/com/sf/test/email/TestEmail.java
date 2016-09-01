@@ -1,6 +1,9 @@
 package com.sf.test.email;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.HtmlEmail;
@@ -61,7 +64,40 @@ public class TestEmail {
 		
 	}
 	public static void main(String[] args) {
-		new TestEmail().testHtmlEmail();
+		String a="1540";
+		String b="546";
+		char[] arrs=a.toCharArray();
+		char[] brrs=b.toCharArray();
+		List<Integer> list=new ArrayList<Integer>();
+		for(int i=0;i<arrs.length||i<brrs.length;i++){
+			int temp=0;
+			if(i<arrs.length){
+				temp+=Integer.parseInt(arrs[i]+"");
+			}
+			if(i<brrs.length){
+				temp+=Integer.parseInt(brrs[i]+"");
+			}
+			list.add(temp);
+		}
+		String result="";
+		int up=0;
+		for(int last=list.size()-1;last>=0;last--){
+			int temp=list.get(last);
+			if(up>0){
+				temp++;
+			}
+			if(temp>=10){
+				up=1;
+			}else{
+				up=0;
+			}
+			result+=temp%10;
+		}
+		String info="";
+		for(int last=result.toCharArray().length-1;last>=0;last--){
+			info+=result.toCharArray()[last];
+		}
+		System.out.println(info);
 	}
 	
 }

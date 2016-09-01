@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sf.qzm.dao.AgeDao">
+<cache eviction="LRU" flushInterval="60000" size="1024" readOnly="true"/>
+<resultMap type="com.sf.qzm.bean.constant.Age" id="age">
+	<id property="ageId" column="ageId"/>
+	<result property="start" column="start" />
+	<result property="end" column="end" />
+	<result property="name" column="name" />
+	<result property="isDelete" column="isDelete" />
+	
+	
+</resultMap>
+	<insert id="save" >
+		insert into age(start,end,name)
+		values(#{age.start},#{age.end},#{age.name})
+	</insert>
+	<update id="update">
+		update age set ageId=#{age.ageId}
+			<if test="age.start!=null">
+				,start=#{age.start}
+			</if>
+			<if test="age.end!=null">
+				,end=#{age.end}
+			</if>
+			<if test="age.name!=null">
+				,name=#{age.name}
+			</if>
+			<if test="age.isDelete!=null">
+				,isDelete=#{age.isDelete}
+			</if>
+		where ageId=#{age.ageId}
+	</update>
+	
+	<select id="get" resultMap="age">
+		select c.ageId,c.start,c.end,c.name,c.isDelete
+		 from age c
+		    where (c.isDelete=0 or c.isDelete is null) 
+		    <if test="age.ageId!=null">
+				and c.ageId=#{age.ageId}
+			</if>
+	</select>
+	<select id="list" resultMap="age">
+			select c.ageId,c.start,c.end,c.name,c.isDelete
+			 from age c
+		    where (c.isDelete=0 or c.isDelete is null) 
+		    <if test="age.ageId!=null">
+				and c.ageId=#{age.ageId}
+			</if>
+			order by c.ageId 
+	</select>
+	<select id="count" resultType="int">
+		
+	</select>
+	
+	
+	
+</mapper>  

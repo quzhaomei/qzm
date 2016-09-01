@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sf.qzm.dao.CompanyTypeDao">
+<cache eviction="LRU" flushInterval="60000" size="1024" readOnly="true"/>
+<resultMap type="com.sf.qzm.bean.biz.CompanyType" id="type">
+	<id property="typeId" column="typeId"/>
+	<result property="name" column="name" />
+</resultMap>
+	<insert id="save" >
+		insert into company_type(name)
+		values(#{type.name})
+	</insert>
+	<update id="update">
+		update company_type set typeId=#{type.typeId}
+			<if test="type.name!=null">
+				,name=#{type.name}
+			</if>
+		where typeId=#{type.typeId}
+	</update>
+	
+	<select id="get" resultMap="type">
+		select c.typeId,c.name
+		 from company_type c
+		    where 1=1
+		    <if test="type.typeId!=null">
+				and c.typeId=#{type.typeId}
+			</if>
+	</select>
+	<select id="list" resultMap="type">
+			select c.typeId,c.name
+		 from company_type c
+		    where 1=1
+		    <if test="type.typeId!=null">
+				and c.typeId=#{type.typeId}
+			</if>
+			order by c.typeId
+	</select>
+	
+</mapper>  

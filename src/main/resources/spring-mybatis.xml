@@ -35,7 +35,7 @@
 		<property name="idleConnectionTestPeriod" value="1800" />
 		<property name="preferredTestQuery" value="select 1" />
 		<property name="acquireIncrement" value="5" />
-		<property name="unreturnedConnectionTimeout" value="30" />
+		<property name="unreturnedConnectionTimeout" value="300" />
 		<property name="autoCommitOnClose" value="false" />
 		</bean>
 	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean"
@@ -54,5 +54,6 @@
 	<!-- 注解事务管理，aop顺序为2 -->
 	<tx:annotation-driven transaction-manager="transactionManager" order="2" />
 	<!-- 配置aop -->
-	<aop:aspectj-autoproxy/>	
+	<aop:aspectj-autoproxy/>
+ 	
 </beans>

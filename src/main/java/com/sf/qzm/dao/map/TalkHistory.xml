@@ -47,6 +47,13 @@
 		<if test="history.historyId!=null">
 			and historyId=#{history.historyId}
 		</if>
+		<if test="history.fromId!=null and history.toId!=null">
+			and (
+			`fromId`=#{history.fromId} and `toId`=#{history.toId}
+			or 
+			`fromId`=#{history.toId} and `toId`=#{history.fromId}
+			)
+		</if>
 	</delete>
 	<select id="getListByParam" resultMap="historyDTO">
 		select `historyId`,`fromId`,`fromName`,`fromHeadImg`,`toId`,`toName`,

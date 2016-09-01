@@ -7,13 +7,21 @@
 		<result property="roleId" column="roleId" />
 		<result property="menuId" column="menuId"/>
 	</resultMap>
-	<resultMap type="com.sf.qzm.dto.admin.MenuManagerDTO" id="menuDTO">
+	
+	<resultMap type="com.sf.qzm.dto.menu.PowerMenuDTO" id="powerMenu">
 		<id property="menuId" column="menuId" />
-		<result property="type" column="type" />
-		<result property="parentId" column="parentId" />
-		<result property="menuName" column="menuName" />
-		<result property="uri" column="uri" />
-		<result property="tempId" column="tempId"/>
+		<result property="name" column="name" />
+		<result property="status" column="status" />
+		<collection property="childMenu" column="menuId2" ofType="com.sf.qzm.dto.menu.PowerMenuDTO" >
+			<id property="menuId" column="menuId2" />
+			<result property="name" column="name2" />
+			<result property="status" column="status2" />
+			<collection property="childMenu" column="menuId3" ofType="com.sf.qzm.dto.menu.PowerMenuDTO" >
+			<id property="menuId" column="menuId3" />
+			<result property="name" column="name3" />
+			<result property="status" column="status3" />
+		</collection>
+		</collection>
 	</resultMap>
 	
 	<insert id="save" useGeneratedKeys="true" keyProperty="userToRole.id">
@@ -35,35 +43,33 @@
 	
 	<delete id="delBatch">
              delete from role_to_menus where 
-                  roleId=#{roleId} and id in
-		 <foreach collection="tempIds" item="tempId" index="index" open="(" close=")" separator=",">
-                #{tempId}  
-         </foreach>
+                  roleId=#{roleId} 
 	</delete>
 	
 	<update id="update"></update>
 	<delete id="delete">
 	</delete>
 	
-	<select id="getMenuListByParam" resultMap="menuDTO">
-		select m.menuId,m.type,m.parentId,m.menuName,m.uri,rm.roleId,rt.id tempId from menu_manager m 
-			left join role_to_menus rt on rt.menuId=m.menuId 
-			<if test="roleToMenus.roleId!=null">
-				and rt.roleId=#{roleToMenus.roleId}
-			</if>
-			left join role_manager rm on rm.roleId=rt.roleId
-			order by m.menuId
+
+	<select id="getMenuTreeByRoleId" resultMap="powerMenu">
+		select am1.`menuId`,am1.`name`,
+	IF((select rtm.id from role_to_menus rtm where rtm.menuId=am1.`menuId` and rtm.roleId=#{roleId}) is null,0,1) status,
+	am2.`menuId` menuId2,am2.`code` code2,am2.`name` name2,
+	(case when am2.`menuId` is NULL then null 
+	when (select rtm.id from role_to_menus rtm where rtm.menuId=am2.`menuId` and rtm.roleId=#{roleId}) is null then 0
+	else 1 end) status2,
+	am3.`menuId` menuId3,am3.`code` code3,am3.`name` name3,
+	(case when am3.`menuId` is NULL then null 
+	when (select rtm.id from role_to_menus rtm where rtm.menuId=am3.`menuId` and rtm.roleId=#{roleId}) is null then 0
+	else 1 end) status3
+	from auto_menu am1 
+	left join auto_menu am2 on am1.`code`=am2.`parentCode` and am2.`type`=1
+	left join auto_menu am3 on am3.`parentCode`=am2.`code` and am3.`type`=2
+	where am1.`type`=0 
+	order by am1.sequence,am2.sequence,am3.sequence
 	</select>
-	<select id="getMenuListByRole" resultMap="menuDTO">
-		select m.menuId,
-		m.type,
-		m.parentId,
-		m.menuName,
-		m.uri from 
-		role_to_menus rm 
-		left join menu_manager m on m.menuId=rm.menuId
-		where rm.roleId=#{roleToMenus.roleId} 
-	</select>
+
+	
 	<select id="getByParam" resultMap="roleToMenuDTO">
 		select id,roleId,menuId from role_to_menus where 1=1
 		<if test="roleToMenus.id!=null">

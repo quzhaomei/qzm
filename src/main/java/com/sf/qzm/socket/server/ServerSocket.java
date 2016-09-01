@@ -18,6 +18,7 @@ import com.corundumstudio.socketio.listener.ConnectListener;
 import com.corundumstudio.socketio.listener.DataListener;
 import com.corundumstudio.socketio.listener.DisconnectListener;
 import com.sf.qzm.bean.bis.TalkHistory;
+import com.sf.qzm.dto.bis.CooperationDTO;
 import com.sf.qzm.dto.bis.HistoryCountDTO;
 import com.sf.qzm.dto.bis.TalkHistoryDTO;
 import com.sf.qzm.service.CooperationService;
@@ -33,6 +34,8 @@ import com.sf.qzm.util.other.PasswordUtils;
 public class ServerSocket {
 	@Resource
 	private TalkHistoryService historyService;
+	@Resource
+	private CooperationService cooperationService;
 	public static final Integer DEFAULT_SOCKET_PORT=14080;
 	public static final String WELCOME="您好！有什么需要帮助的吗？";
 	private boolean start=false;
@@ -131,14 +134,28 @@ public class ServerSocket {
 					socketMap.get(toUserId).sendEvent
 					("per2perTalking", JsonUtils.object2json(history));
 					//信息更新为已接收
-					history.setStatus(TalkHistory.STATUS_ACCEPT);
-					historyService.saveOrUpdate(history);
+			//		history.setStatus(TalkHistory.STATUS_ACCEPT);
+			//		historyService.saveOrUpdate(history);
 					
 					System.out.println("---"+ talk.getMessage()+"消息");
 				}
 				
 			}
 	    });
+	    
+	    //信息更新为已读
+	    server.addEventListener("read talk", TalkHistory.class, new DataListener<TalkHistory>() {
+	    	
+			@Override
+			public void onData(SocketIOClient socket, TalkHistory talk,
+					AckRequest request) throws Exception {
+				talk.setStatus(TalkHistory.STATUS_ACCEPT);
+				//更新为已读聊天信息
+				historyService.saveOrUpdate(talk);
+				
+			}
+	    });
+	    
 	    //load history
 	    server.addEventListener("load history", PersionTalkInfo.class, new DataListener<PersionTalkInfo>() {
 	    	
@@ -165,10 +182,13 @@ public class ServerSocket {
 	    		socket.sendEvent("load history",JsonUtils.object2json(talks));
 	    		
 	    		if(talks==null||talks.size()==0){//发送问候语
+	    			String code=user.getCode();
+	    			CooperationDTO coop=cooperationService.getByCode(code);
+	    			
 					TalkHistory welcome=new TalkHistory();
 					welcome.setFromId(talk.getToId());
-					welcome.setFromHeadImg("");
-					welcome.setFromName("系统机器人");
+					welcome.setFromHeadImg(coop.getLogo());
+					welcome.setFromName(coop.getName()+"［自动回复］");
 					welcome.setToId(talk.getFromId());
 					welcome.setToHeadImg(user.getHeadImg());
 					welcome.setToName(user.getName());
@@ -177,6 +197,23 @@ public class ServerSocket {
 					socket.sendEvent("per2perTalking",JsonUtils.object2json(welcome));//发送
 				}
 	    		
+	    		
+	    	}
+	    });
+	    //delete history
+	    server.addEventListener("delete history", PersionTalkInfo.class, new DataListener<PersionTalkInfo>() {
+	    	
+	    	@SuppressWarnings("deprecation")
+			@Override
+	    	public void onData(SocketIOClient socket, PersionTalkInfo talk,
+	    			AckRequest request) throws Exception {
+	    		UserInfo user=socket.get("user");
+	    		TalkHistory history=new TalkHistory();
+	    		history.setFromId(talk.getToId());
+	    		history.setToId(user.getId());
+	    		if(talk.getToId()!=null&&user.getId()!=null)
+	    		//删除聊天信息
+	    		historyService.delete(history);
 	    		
 	    	}
 	    });
@@ -192,7 +229,7 @@ public class ServerSocket {
 	        	}
 	        }
 	    });
-	    	server.start();
+//	    	server.start();
 	    	start=true;
 	}
 	public boolean isStart() {
@@ -211,15 +248,18 @@ public class ServerSocket {
 			talk.setFromName("");
 			talk.setFromHeadImg("");
 		}
-		UserInfo toUser=(UserInfo) (socketMap.get(info.getToId())!=null?socketMap.get(info.getToId()).get("user"):null);
+		talk.setToName("");
+		talk.setToHeadImg("");
 		talk.setToId(info.getToId());
+		/**
+		UserInfo toUser=(UserInfo) (socketMap.get(info.getToId())!=null?socketMap.get(info.getToId()).get("user"):null);
 		if(toUser!=null){
 			talk.setToName(toUser.getName());
 			talk.setToHeadImg(toUser.getHeadImg());
 		}else{
 			talk.setToName("");
 			talk.setToHeadImg("");
-		}
+		}**/
 		talk.setCreateDate(new Date().getTime());
 		talk.setStatus(TalkHistory.STATUS_UN_ACCEPT);
 		talk.setMessage(info.getMessage());

@@ -9,7 +9,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.sf.qzm.annotation.ClassLimit;
 import com.sf.qzm.bean.admin.RoleManager;
 import com.sf.qzm.controller.BaseController;
 import com.sf.qzm.dto.JsonDTO;
@@ -23,9 +22,6 @@ import com.sf.qzm.util.other.Constant;
  * @author qzm
  * @since 2015-8-31
  */
-@Controller
-@RequestMapping(value = "role")
-@ClassLimit(uri = true)
 public class RoleController extends BaseController {
 	@Resource
 	private RoleManagerService roleManagerService;

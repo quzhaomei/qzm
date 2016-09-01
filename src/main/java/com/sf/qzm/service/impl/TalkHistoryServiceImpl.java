@@ -31,7 +31,7 @@ public class TalkHistoryServiceImpl implements TalkHistoryService {
 
 	@Override
 	public void delete(TalkHistory bean) {
-		
+		talkHistoryDao.delete(bean);
 	}
 
 	@Override

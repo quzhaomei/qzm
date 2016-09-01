@@ -31,6 +31,18 @@ public class PageDTO<T> implements Serializable {
 	 * 排序字段
 	 */
 	private String orderBy;
+	
+	private String direction;
+	
+	
+	public String getDirection() {
+		return direction;
+	}
+
+	public void setDirection(String direction) {
+		this.direction = direction;
+	}
+
 	/**
 	 * 数据对象
 	 */
@@ -83,5 +95,6 @@ public class PageDTO<T> implements Serializable {
 	public void setOrderBy(String orderBy) {
 		this.orderBy = orderBy;
 	}
+
 	
 }

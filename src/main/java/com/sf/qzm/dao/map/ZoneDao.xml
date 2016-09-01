@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sf.qzm.dao.ZoneDao">
+<cache eviction="LRU" flushInterval="60000" size="1024" readOnly="true"/>
+<resultMap type="com.sf.qzm.bean.constant.Zone" id="zone">
+	<id property="zoneId" column="zoneId"/>
+	<result property="name" column="name" />
+	<result property="parentId" column="parentId" />
+	<result property="tempId" column="tempId" />
+</resultMap>
+	<insert id="save" >
+		insert into zone(name,parentId)
+		values(#{zone.name},#{zone.parentId})
+	</insert>
+	
+	<update id="update">
+		update zone set zoneId=#{zone.zoneId}
+			<if test="zone.name!=null">
+				,name=#{zone.name}
+			</if>
+			<if test="zone.isDelete!=null">
+				,isDelete=#{zone.isDelete}
+			</if>
+		where zoneId=#{zone.zoneId}
+	</update>
+	
+	<select id="get" resultMap="zone">
+		select c.zoneId,c.name,c.parentId
+		 from zone c 
+		    where (c.isDelete=0 or c.isDelete is null) 
+		    <if test="zone.zoneId!=null">
+				and c.zoneId=#{zone.zoneId}
+			</if>
+		    <if test="zone.name!=null">
+				and c.name=#{zone.name}
+			</if>
+		    <if test="zone.parentId!=null">
+				and c.parentId=#{zone.parentId}
+			</if>
+	</select>
+	
+	
+	<select id="list" resultMap="zone">
+		select c.zoneId,c.name,c.parentId
+		 from zone c 
+		    where (c.isDelete=0 or c.isDelete is null) 
+		    <if test="zone.zoneId!=null">
+				and c.zoneId=#{zone.zoneId}
+			</if>
+			<if test="zone.name!=null">
+				and c.name=#{zone.name}
+			</if>
+		    <if test="zone.parentId!=null">
+				and c.parentId=#{zone.parentId}
+			</if>
+			order by c.zoneId 
+	</select>
+	<select id="root" resultMap="zone">
+		select c.zoneId,c.name,c.parentId
+		 from zone c 
+		    where (c.isDelete=0 or c.isDelete is null) 
+		    and c.parentId is null
+			order by c.zoneId 
+	</select>
+	
+	<select id="count" resultType="int">
+		select count(c.*)
+		 from zone c 
+		    where (c.isDelete=0 or c.isDelete is null) 
+		    <if test="zone.zoneId!=null">
+				and c.zoneId=#{zone.zoneId}
+			</if>
+			order by c.zoneId 
+	</select>
+	
+	
+	
+	
+	
+	
+</mapper>  

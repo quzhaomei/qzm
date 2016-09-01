@@ -16,6 +16,7 @@ public class Cooperation {
 	private String description;//描述
 	private Integer status;//状态 0-冻结，1-激活
 	private Date createDate;//
+	private String logo;
 	
 	public Integer getCooperationId() {
 		return cooperationId;
@@ -52,6 +53,12 @@ public class Cooperation {
 	}
 	public void setCreateDate(Date createDate) {
 		this.createDate = createDate;
+	}
+	public String getLogo() {
+		return logo;
+	}
+	public void setLogo(String logo) {
+		this.logo = logo;
 	}
 	
 }

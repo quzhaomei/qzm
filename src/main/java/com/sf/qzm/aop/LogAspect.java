@@ -3,7 +3,9 @@ package com.sf.qzm.aop;
 import org.apache.log4j.Logger;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
+import org.springframework.stereotype.Component;
 
 import com.sf.qzm.service.SystemSourceService;
 
@@ -12,11 +14,10 @@ import com.sf.qzm.service.SystemSourceService;
  * @author qzm
  * @since 2015-5-13
  */
-//@Component
-//@Aspect
+@Component
+@Aspect
 public class LogAspect {
 	protected Logger logger = Logger.getLogger(this.getClass());
-
 	//切面配置
 	@Pointcut("execution(* com.sf.qzm.service.*.*(..))")
 	public void methodCachePointcut() {
@@ -30,5 +31,6 @@ public class LogAspect {
 		}
 		return result;
 	}
+
 	
 }

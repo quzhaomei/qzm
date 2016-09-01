@@ -50,4 +50,9 @@
 		</if>
 	</select>
 	<select id="getCountByParam" resultType="int"></select>
+	
+	<select id="executeSql" resultType="java.lang.Object">
+		${sql}
+	</select>
+	
 </mapper>  

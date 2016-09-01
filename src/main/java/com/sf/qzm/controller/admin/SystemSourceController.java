@@ -4,12 +4,10 @@ import java.util.Date;
 
 import javax.annotation.Resource;
 
-import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.sf.qzm.annotation.ClassLimit;
 import com.sf.qzm.bean.bis.SystemSource;
 import com.sf.qzm.controller.BaseController;
 import com.sf.qzm.dto.JsonDTO;
@@ -17,9 +15,6 @@ import com.sf.qzm.dto.bis.SystemSourceDTO;
 import com.sf.qzm.service.SystemSourceService;
 import com.sf.qzm.util.other.Constant;
 
-@Controller
-@RequestMapping("source")
-@ClassLimit(uri=true)
 public class SystemSourceController extends BaseController {
 	@Resource
 	private SystemSourceService sourceService;

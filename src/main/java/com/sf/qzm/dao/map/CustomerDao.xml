@@ -1,0 +1,366 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sf.qzm.dao.CustomerDao">
+<cache eviction="LRU" flushInterval="60000" size="1024" readOnly="true"/>
+<resultMap type="com.sf.qzm.dto.biz.CustomerDTO" id="customer">
+	<id property="customerId" column="customerId"/>
+	<result property="customerCode" column="customerCode" />
+	<result property="phone" column="phone" />
+	<result property="name" column="name" />
+	<result property="carCode" column="carCode" />
+	<result property="integration" column="integration" />
+	<result property="status" column="status" />
+	<result property="createDate" column="createDate" />
+	<result property="info" column="info" />
+	<result property="gender" column="gender" />
+	
+	<result property="serviceDate" column="serviceDate" />
+	
+	<result property="nextcallTime" column="nextcallTime" />
+	<result property="nextcallInfo" column="nextcallInfo" />
+	<result property="fileDate" column="fileDate" />
+	
+	<association property="servicer" column="serviceId" javaType="com.sf.qzm.dto.admin.AdminUserDTO">
+		<id property="adminUserId" column="serviceId"/>
+			<result property="nickname" column="nickname_S"/>
+	</association>
+	<association property="age" column="ageId" javaType="com.sf.qzm.bean.constant.Age">
+		<id property="ageId" column="ageId"/>
+		<result property="name" column="name_a"/>
+	</association>
+	
+	<association property="channel" column="channelId" javaType="com.sf.qzm.dto.biz.ChannelDTO">
+		<id property="channelId" column="channelId"/>
+		<result property="name" column="name_c"/>
+	</association>
+	
+	<association property="createUser" column="createUserId" javaType="com.sf.qzm.dto.admin.AdminUserDTO">
+			<id property="adminUserId" column="createUserId"/>
+			<result property="nickname" column="nickname"/>
+	</association>
+	
+	<collection property="houses" column="houseId" ofType="com.sf.qzm.dto.biz.CustomerHouseDTO" >
+			<id property="houseId" column="houseId" />
+			<result property="houseLocation" column="houseLocation" />
+			<result property="status" column="status_ch" />
+		</collection>
+	
+</resultMap>
+	<insert id="save" useGeneratedKeys="true" keyProperty="customer.customerId" >
+		insert into customer(customerId,name,customerCode,phone,status,info,createDate,channelId,createUserId,ageId,carCode)
+		values(#{customer.customerId},#{customer.name},#{customer.customerCode},#{customer.phone},#{customer.status},
+			#{customer.info},#{customer.createDate},#{customer.channelId},#{customer.createUserId},
+			#{customer.ageId},#{customer.carCode})
+	</insert>
+	<update id="update">
+		update customer set customerId=#{customer.customerId}
+			<if test="customer.phone!=null">
+				,phone=#{customer.phone}
+			</if>
+			<if test="customer.serviceDate!=null">
+				,serviceDate=#{customer.serviceDate}
+			</if>
+			<if test="customer.nextcallTime!=null">
+				,nextcallTime=#{customer.nextcallTime}
+			</if>
+			<if test="customer.nextcallInfo!=null">
+				,nextcallInfo=#{customer.nextcallInfo}
+			</if>
+			<if test="customer.fileDate!=null">
+				,fileDate=#{customer.fileDate}
+			</if>
+			<if test="customer.channelId!=null">
+				,channelId=#{customer.channelId}
+			</if>
+			<if test="customer.integration!=null">
+				,integration=#{customer.integration}
+			</if>
+			<if test="customer.gender!=null">
+				,gender=#{customer.gender}
+			</if>
+			<if test="customer.carCode!=null">
+				,carCode=#{customer.carCode}
+			</if>
+			<if test="customer.ageId!=null">
+				,ageId=#{customer.ageId}
+			</if>
+			<if test="customer.name!=null">
+				,name=#{customer.name}
+			</if>
+			<if test="customer.info!=null">
+				,info=#{customer.info}
+			</if>
+			<if test="customer.status!=null">
+				,status=#{customer.status}
+			</if>
+			<if test="customer.serviceId!=null">
+				,serviceId=#{customer.serviceId}
+			</if>
+		where customerId=#{customer.customerId}
+	</update>
+	
+	<update id="updateHouse">
+		update customer_house set houseId=#{house.houseId}
+			<if test="house.status!=null">
+				,status=#{house.status}
+			</if>
+			<if test="house.giftAddress!=null">
+				,giftAddress=#{house.giftAddress}
+			</if>
+			<if test="house.callbackTips!=null">
+				,callbackTips=#{house.callbackTips}
+			</if>
+			<if test="house.zoneId!=null">
+				,zoneId=#{house.zoneId}
+			</if>
+			<if test="house.gift!=null">
+				,gift=#{house.gift}
+			</if>
+			<if test="house.log!=null">
+				,log=#{house.log}
+			</if>
+			<if test="house.comment!=null">
+				,comment=#{house.comment}
+			</if>
+			<if test="house.hasSoft!=null">
+				,hasSoft=#{house.hasSoft}
+			</if>
+			<if test="house.budgetId!=null">
+				,budgetId=#{house.budgetId}
+			</if>
+			<if test="house.designType!=null">
+				,designType=#{house.designType}
+			</if>
+			<if test="house.area!=null">
+				,area=#{house.area}
+			</if>
+			<if test="house.isNew!=null">
+				,isNew=#{house.isNew}
+			</if>
+			<if test="house.houseTypeId!=null">
+				,houseTypeId=#{house.houseTypeId}
+			</if>
+			<if test="house.houseInfo!=null">
+				,houseInfo=#{house.houseInfo}
+			</if>
+			<if test="house.houseLocation!=null">
+				,houseLocation=#{house.houseLocation}
+			</if>
+		where houseId=#{house.houseId}
+	</update>
+	
+	<select id="get" resultMap="customer">
+		select c.customerId,c.name,c.customerCode,c.status,c.phone,unix_timestamp(c.createDate)*1000 createDate,c.gender,
+		c.info,a.channelId,a.name name_c,c.createUserId,au.nickname,c.ageId,c.carCode,c.integration,ag.name name_a
+		,ch.houseLocation,c.serviceId,au1.nickname nickname_s,ch.status status_ch,unix_timestamp(c.nextcallTime)*1000 nextcallTime
+		,unix_timestamp(c.fileDate)*1000 fileDate,unix_timestamp(c.serviceDate)*1000 serviceDate,c.nextcallInfo
+		 from customer c 
+		 left join channel a on c.channelId=a.channelId
+		 left join admin_user au on au.adminUserId=c.createUserId
+		 left join age ag on ag.ageId=c.ageId
+		 left join customer_house ch on ch.customerId=c.customerId
+		 left join admin_user au1 on au1.adminUserId=c.serviceId
+		 where 1=1
+		    <if test="customer.customerId!=null">
+				and c.customerId=#{customer.customerId}
+			</if>
+		    <if test="customer.customerCode!=null">
+				and c.customerCode=#{customer.customerCode}
+			</if>
+		    <if test="customer.channelId!=null">
+				and c.channelId=#{customer.channelId}
+			</if>
+		    <if test="customer.status!=null">
+				and c.status=#{customer.status}
+			</if>
+		    <if test="customer.phone!=null">
+				and c.phone=#{customer.phone}
+			</if>
+	</select>
+	
+	<select id="list" resultMap="customer">
+		select c.customerId,c.name,c.customerCode,c.status,c.phone,unix_timestamp(c.createDate)*1000 createDate,c.gender,
+		c.info,a.channelId,a.name name_c,c.createUserId,au.nickname,c.ageId,c.carCode,c.integration,ag.name name_a
+		 ,ch.houseLocation,c.serviceId,au1.nickname nickname_s,ch.status status_ch,unix_timestamp(c.nextcallTime)*1000 nextcallTime
+		 ,unix_timestamp(c.fileDate)*1000 fileDate,unix_timestamp(c.serviceDate)*1000 serviceDate,c.nextcallInfo
+		 from customer c 
+		 left join channel a on c.channelId=a.channelId
+		 left join admin_user au on au.adminUserId=c.createUserId
+		 left join age ag on ag.ageId=c.ageId
+		 left join customer_house ch on ch.customerId=c.customerId
+		  left join admin_user au1 on au1.adminUserId=c.serviceId
+		 where 1=1
+		    <if test="customer.customerId!=null">
+				and c.customerId=#{customer.customerId}
+			</if>
+		    <if test="customer.customerCode!=null">
+				and c.customerCode=#{customer.customerCode}
+			</if>
+		    <if test="customer.channelId!=null">
+				and c.channelId=#{customer.channelId}
+			</if>
+		    <if test="customer.status!=null">
+				and c.status=#{customer.status}
+			</if>
+		    <if test="customer.phone!=null">
+				and c.phone=#{customer.phone}
+			</if>
+		    <if test="customer.serviceId!=null">
+				and c.serviceId=#{customer.serviceId}
+			</if>
+			order by c.createDate
+	</select>
+	
+	<select id="listByPage" resultMap="customer">
+		select c.customerId,c.name,c.customerCode,c.status,c.phone,unix_timestamp(c.createDate)*1000 createDate,c.gender,
+		c.info,a.channelId,a.name name_c,c.createUserId,au.nickname,c.ageId,c.carCode,c.integration,ag.name name_a
+		 ,ch.houseLocation,c.serviceId,au1.nickname nickname_s,ch.status status_ch,unix_timestamp(c.nextcallTime)*1000 nextcallTime
+		 ,unix_timestamp(c.fileDate)*1000 fileDate,unix_timestamp(c.serviceDate)*1000 serviceDate,c.nextcallInfo
+		 from customer c 
+		 left join channel a on c.channelId=a.channelId
+		 left join admin_user au on au.adminUserId=c.createUserId
+		 left join age ag on ag.ageId=c.ageId
+		 left join customer_house ch on ch.customerId=c.customerId
+		  left join admin_user au1 on au1.adminUserId=c.serviceId
+		 where c.customerId  in (select sub1.customerId from (select distinct(sub.customerId) from (
+		 select c1.customerId
+		 from customer c1 
+		 left join channel a1 on c1.channelId=a1.channelId
+		 left join admin_user au1 on au1.adminUserId=c1.createUserId
+		 left join age ag1 on ag1.ageId=c1.ageId
+		 left join customer_house ch1 on ch1.customerId=c1.customerId
+		  left join admin_user au11 on au11.adminUserId=c1.serviceId
+			 where 1=1
+		    <if test="page.param.name!=null">
+				and c1.name like '%${page.param.name}%'
+			</if>
+		    <if test="page.param.createUser!=null">
+				and au1.nickname like '%${page.param.createUser}%'
+			</if>
+		    <if test="page.param.channel!=null">
+				and a1.name like '%${page.param.channel}%'
+			</if>
+		    <if test="page.param.customerId!=null">
+				and c1.customerId=#{page.param.customerId}
+			</if>
+		    <if test="page.param.customerCode!=null">
+				and c1.customerCode=#{page.param.customerCode}
+			</if>
+			
+		    <if test="page.param.createDate_start!=null">
+				and to_days(c1.createDate) &gt;= to_days(#{page.param.createDate_start})
+			</if>
+			 <if test="page.param.createDate_end!=null">
+				and to_days(c1.createDate) &lt;= to_days(#{page.param.createDate_end})
+			</if>
+			 <if test="page.param.houseLocation!=null">
+				and ch1.houseLocation like '%${page.param.houseLocation}%'
+			</if>
+			
+			
+		    <if test="page.param.channelId!=null">
+				and c1.channelId=#{page.param.channelId}
+			</if>
+		    <if test="page.param.status!=null">
+				and c1.status=#{page.param.status}
+			</if>
+		    <if test="page.param.phone!=null">
+				and c1.phone=#{page.param.phone}
+			</if>
+		    <if test="page.param.serviceId!=null">
+				and c1.serviceId=#{page.param.serviceId}
+			</if>
+		    <if test="page.param.key!=null"><!-- 关键词搜索 -->
+				and (
+					c1.name like '%${page.param.key}%'
+				or c1.phone like '%${page.param.key}%'	
+				or c1.customerCode like '%${page.param.key}%'	
+				)
+			</if>
+			) sub
+			<if test="page.orderBy!=null">
+					order by sub.customerId ${page.direction}
+				</if>
+			limit ${(page.pageIndex-1)*page.pageSize},${page.pageSize}
+			) sub1)
+			 <if test="page.orderBy!=null">
+					order by c.customerId ${page.direction}
+				</if>
+			
+	</select>
+	
+	<select id="count" resultType="int">
+		select count(c.customerId)
+		 from customer c 
+		 where c.customerId  in (select sub1.customerId from (select distinct(sub.customerId) from (
+		 select c1.customerId
+		 from customer c1 
+		 left join channel a1 on c1.channelId=a1.channelId
+		 left join admin_user au1 on au1.adminUserId=c1.createUserId
+		 left join age ag1 on ag1.ageId=c1.ageId
+		 left join customer_house ch1 on ch1.customerId=c1.customerId
+		  left join admin_user au11 on au11.adminUserId=c1.serviceId
+			 where 1=1
+		    <if test="customer.name!=null">
+				and c1.name like '%${customer.name}%'
+			</if>
+		    <if test="customer.createUser!=null">
+				and au1.nickname like '%${customer.createUser}%'
+			</if>
+		    <if test="customer.channel!=null">
+				and a1.name like '%${customer.channel}%'
+			</if>
+		    <if test="customer.customerId!=null">
+				and c1.customerId=#{customer.customerId}
+			</if>
+		    <if test="customer.customerCode!=null">
+				and c1.customerCode=#{customer.customerCode}
+			</if>
+			
+		    <if test="customer.createDate_start!=null">
+				and to_days(c1.createDate) &gt;= to_days(#{customer.createDate_start})
+			</if>
+			 <if test="customer.createDate_end!=null">
+				and to_days(c1.createDate) &lt;= to_days(#{customer.createDate_end})
+			</if>
+			 <if test="customer.houseLocation!=null">
+				and ch1.houseLocation like '%${customer.houseLocation}%'
+			</if>
+			
+		    <if test="customer.channelId!=null">
+				and c1.channelId=#{customer.channelId}
+			</if>
+		    <if test="customer.status!=null">
+				and c1.status=#{customer.status}
+			</if>
+		    <if test="customer.phone!=null">
+				and c1.phone=#{customer.phone}
+			</if>
+		    <if test="customer.serviceId!=null">
+				and c1.serviceId=#{customer.serviceId}
+			</if>
+		    <if test="customer.key!=null"><!-- 关键词搜索 -->
+				and (
+					c1.name like '%${customer.key}%'
+				or c1.phone like '%${customer.key}%'	
+				or c1.customerCode like '%${customer.key}%'	
+				)
+			</if>
+			) sub
+			) sub1)
+	</select>
+	
+	<select id="nextCustomerCode" resultType="int">
+		select IFNULL(max(r.customerCode)+1,100001)
+		from `customer` r
+	</select>
+	
+	<select id="getByIds" resultMap="customer">
+		select c.customerId,c.phone from 
+		customer c where c.customerId in(
+		 <foreach collection="ids"  item="id"  separator="," >  
+	        #{id}
+	    </foreach> 
+	    )
+	</select>	
+</mapper>  

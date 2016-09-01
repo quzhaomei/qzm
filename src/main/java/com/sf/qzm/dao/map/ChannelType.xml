@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sf.qzm.dao.ChannelTypeDao">
+<cache eviction="LRU" flushInterval="60000" size="1024" readOnly="true"/>
+<resultMap type="com.sf.qzm.dto.biz.ChannelTypeDTO" id="type">
+	<id property="typeId" column="typeId"/>
+	<result property="name" column="name" />
+	<result property="info" column="info" />
+	
+	<result property="createDate" column="createDate" />
+	<result property="isDelete" column="isDelete" />
+	
+	<association property="createUser" column="createUserId" javaType="com.sf.qzm.dto.admin.AdminUserDTO">
+		<id property="adminUserId" column="createUserId"/>
+		<result property="nickname" column="nickname"/>
+	</association>
+</resultMap>
+	<insert id="save" >
+		insert into channel_type(name,info,createDate,createUserId)
+		values(#{type.name},#{type.info},#{type.createDate},
+			#{type.createUserId})
+	</insert>
+	<update id="update">
+		update channel_type set typeId=#{type.typeId}
+			<if test="type.name!=null">
+				,name=#{type.name}
+			</if>
+			<if test="type.isDelete!=null">
+				,isDelete=#{type.isDelete}
+			</if>
+			<if test="type.info!=null">
+				,info=#{type.info}
+			</if>
+		where typeId=#{type.typeId}
+	</update>
+	<select id="get" resultMap="type">
+		select c.typeId,c.name,c.isDelete,c.info,unix_timestamp(c.createDate)*1000 createDate,c.createUserId,au.nickname
+		 from channel_type c left join admin_user au on c.createUserId=au.adminUserId
+		    where (c.isDelete=0 or c.isDelete is null) 
+		    <if test="type.typeId!=null">
+				and c.typeId=#{type.typeId}
+			</if>
+	</select>
+	<select id="list" resultMap="type">
+		select  c.typeId,c.name,c.isDelete,c.info,unix_timestamp(c.createDate)*1000 createDate,c.createUserId,au.nickname
+		 from channel_type c left join admin_user au on c.createUserId=au.adminUserId
+		    where  (c.isDelete=0 or c.isDelete is null) 
+		    <if test="type.typeId!=null">
+				and c.typeId=#{type.typeId}
+			</if>
+			order by c.createDate 
+	</select>
+	<select id="count" resultType="int">
+		select count(*)
+		 from channel_type c left join admin_user au on c.createUserId=au.adminUserId
+		    where (c.isDelete=0 or c.isDelete is null) 
+		    <if test="type.typeId!=null">
+				and c.typeId=#{type.typeId}
+			</if>
+	</select>
+	
+	
+	
+</mapper>  

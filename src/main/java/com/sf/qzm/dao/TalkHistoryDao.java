@@ -12,7 +12,7 @@ import com.sf.qzm.dto.bis.TalkHistoryDTO;
 public interface TalkHistoryDao {
 	void save(@Param(value="history") TalkHistory history);//增
 	void update(@Param(value="history")TalkHistory history);//改
-	void delete(TalkHistory history);//删
+	void delete(@Param(value="history")TalkHistory history);//删
 	List<TalkHistoryDTO> getListByParam(@Param(value="history")TalkHistory history);//查询数组
 	TalkHistoryDTO getByParam(@Param(value="history")TalkHistory history);//查询单个
 	int getCountByParam(@Param(value="history")TalkHistory history);//查询数量

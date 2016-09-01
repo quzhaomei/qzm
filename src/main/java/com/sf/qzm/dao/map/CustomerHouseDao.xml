@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sf.qzm.dao.CustomerHouseDao">
+<cache eviction="LRU" flushInterval="60000" size="1024" readOnly="true"/>
+<resultMap type="com.sf.qzm.dto.biz.CustomerHouseDTO" id="houseDTO">
+	<id property="houseId" column="houseId"/>
+	<result property="houseInfo" column="houseInfo" />
+	<result property="houseLocation" column="houseLocation" />
+	<result property="isNew" column="isNew" />
+	<result property="area" column="area" />
+	<result property="designType" column="designType" />
+	<result property="hasSoft" column="hasSoft" />
+	<result property="comment" column="comment" />
+	<result property="log" column="log" />
+	<result property="callbackTips" column="callbackTips" />
+	<result property="createDate" column="createDate" />
+	<result property="status" column="status" />
+	<result property="gift" column="gift" />
+	<result property="giftAddress" column="giftAddress" />
+	
+	<association property="customer" column="customerId" javaType="com.sf.qzm.dto.biz.CustomerDTO">
+		<id property="customerId" column="customerId"/>
+		<result property="name" column="name_c"/>
+		<result property="phone" column="phone"/>
+		<result property="customerCode" column="customerCode"/>
+	</association>
+	<association property="zone" column="zoneId" javaType="com.sf.qzm.bean.constant.Zone">
+		<id property="zoneId" column="zoneId"/>
+		<result property="name" column="name_z"/>
+	</association>
+	<association property="houseStyle" column="houseTypeId" javaType="com.sf.qzm.bean.constant.HouseStyle">
+		<id property="styleId" column="houseTypeId"/>
+		<result property="name" column="name_s"/>
+	</association>
+	<association property="budget" column="budgetId" javaType="com.sf.qzm.bean.constant.Budget">
+		<id property="budgetId" column="budgetId"/>
+		<result property="name" column="name_b"/>
+	</association>
+</resultMap>
+
+<resultMap type="com.sf.qzm.bean.biz.CustomerHouse" id="house">
+	<id property="houseId" column="houseId"/>
+	<result property="houseInfo" column="houseInfo" />
+	<result property="houseLocation" column="houseLocation" />
+	<result property="isNew" column="isNew" />
+	<result property="area" column="area" />
+	<result property="designType" column="designType" />
+	<result property="hasSoft" column="hasSoft" />
+	<result property="comment" column="comment" />
+	<result property="log" column="log" />
+	<result property="createDate" column="createDate" />
+	<result property="status" column="status" />
+	<result property="gift" column="gift" />
+	<result property="giftAddress" column="giftAddress" />
+	<result property="customerId" column="customerId"/>
+	<result property="zoneId" column="zoneId"/>
+	<result property="houseTypeId" column="houseTypeId"/>
+	<result property="budgetId" column="budgetId"/>
+</resultMap>
+
+	<insert id="save" useGeneratedKeys="true" keyProperty="house.houseId" >
+		insert into customer_house(houseId, customerId,zoneId,houseInfo,houseLocation,
+		houseTypeId,isNew,area,designType,budgetId,hasSoft,comment,log,gift,
+		giftAddress,createDate,createUserId,status)
+		values(#{house.houseId},#{house.customerId},#{house.zoneId},#{house.houseInfo},#{house.houseLocation},
+		#{house.houseTypeId},#{house.isNew},#{house.area},#{house.designType},#{house.budgetId},
+		#{house.hasSoft},#{house.comment},#{house.log},#{house.gift},#{house.giftAddress},
+		#{house.createDate},#{house.createUserId},#{house.status})
+	</insert>
+	<update id="update">
+		update customer_house set houseId=#{house.houseId}
+			<if test="house.status!=null">
+				,status=#{house.status}
+			</if>
+			<if test="house.giftAddress!=null">
+				,giftAddress=#{house.giftAddress}
+			</if>
+			<if test="house.callbackTips!=null">
+				,callbackTips=#{house.callbackTips}
+			</if>
+			<if test="house.zoneId!=null">
+				,zoneId=#{house.zoneId}
+			</if>
+			<if test="house.gift!=null">
+				,gift=#{house.gift}
+			</if>
+			<if test="house.log!=null">
+				,log=#{house.log}
+			</if>
+			<if test="house.comment!=null">
+				,comment=#{house.comment}
+			</if>
+			<if test="house.hasSoft!=null">
+				,hasSoft=#{house.hasSoft}
+			</if>
+			<if test="house.budgetId!=null">
+				,budgetId=#{house.budgetId}
+			</if>
+			<if test="house.designType!=null">
+				,designType=#{house.designType}
+			</if>
+			<if test="house.area!=null">
+				,area=#{house.area}
+			</if>
+			<if test="house.isNew!=null">
+				,isNew=#{house.isNew}
+			</if>
+			<if test="house.houseTypeId!=null">
+				,houseTypeId=#{house.houseTypeId}
+			</if>
+			<if test="house.houseInfo!=null">
+				,houseInfo=#{house.houseInfo}
+			</if>
+			<if test="house.houseLocation!=null">
+				,houseLocation=#{house.houseLocation}
+			</if>
+		where houseId=#{house.houseId}
+	</update>
+	
+	<select id="get" resultMap="house">
+		select ch.houseId,ch.customerId,ch.createDate,
+		ch.zoneId,z.name name_z,ch.houseInfo,ch.houseLocation,ch.callbackTips,
+		ch.houseTypeId,hs.name name_s,ch.isNew,ch.area,ch.designType,ch.status,
+		ch.budgetId,b.name name_b,ch.hasSoft,ch.comment,ch.log,ch.gift,
+		ch.giftAddress from customer_house ch
+		left join zone z on ch.zoneId=z.zoneId
+		left join house_style hs on hs.styleId=ch.houseTypeId
+		left join budget b on b.budgetId=ch.budgetId
+		where 1=1
+		<if test="house.customerId!=null">
+			and ch.customerId=#{house.customerId}
+		</if>
+		<if test="house.houseId!=null">
+			and ch.houseId=#{house.houseId}
+		</if>
+	</select>
+	<select id="list" resultMap="house">
+		select ch.houseId,ch.customerId,ch.createDate,
+		ch.zoneId,z.name name_z,ch.houseInfo,ch.houseLocation,ch.callbackTips,
+		ch.houseTypeId,hs.name name_s,ch.isNew,ch.area,ch.designType,ch.status,
+		ch.budgetId,b.name name_b,ch.hasSoft,ch.comment,ch.log,ch.gift,
+		ch.giftAddress from customer_house ch
+		left join zone z on ch.zoneId=z.zoneId
+		left join house_style hs on hs.styleId=ch.houseTypeId
+		left join budget b on b.budgetId=ch.budgetId
+		where 1=1
+		<if test="house.customerId!=null">
+			and ch.customerId=#{house.customerId}
+		</if>
+		order by ch.houseId
+	</select>
+	
+	<select id="listByService" resultMap="houseDTO">
+		select ch.houseId,ch.customerId,c.name name_c,c.phone,unix_timestamp(ch.createDate)*1000 createDate,
+		ch.zoneId,z.name name_z,ch.houseInfo,ch.houseLocation,ch.callbackTips,
+		ch.houseTypeId,hs.name name_s,ch.isNew,ch.area,ch.designType,ch.status,
+		ch.budgetId,b.name name_b,ch.hasSoft,ch.comment,ch.log,ch.gift,
+		ch.giftAddress,c.customerCode
+		from customer_house ch
+		left join zone z on ch.zoneId=z.zoneId
+		left join house_style hs on hs.styleId=ch.houseTypeId
+		left join budget b on b.budgetId=ch.budgetId
+		left join customer c on c.customerId=ch.customerId
+		where 1=1
+		and c.serviceId=#{serviceId}
+		and ch.status !=0 <!-- 排除未发布的 -->
+		order by ch.houseId
+	</select>
+</mapper>  

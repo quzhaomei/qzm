@@ -60,7 +60,7 @@ xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee/web-jsptaglibrary_2_0.xsd">
       <info>输出</info>
       
       <attribute>
-       <name>uri</name><!-- 根据uri匹配权限 -->
+       <name>code</name><!-- 根据uri匹配权限 -->
        <required>false</required>
        <rtexprvalue>true</rtexprvalue>
       </attribute>
@@ -72,19 +72,18 @@ xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee/web-jsptaglibrary_2_0.xsd">
       
 </tag>
 <tag>
-	<name>phone</name><!-- 后台权限控制按钮显示标签 -->
-      <tagclass>com.qicai.jspTag.PowerTagPhone</tagclass>
+	<name>source</name>
+      <tagclass>com.sf.qzm.jspTag.SourceTag</tagclass>
       <bodycontent>scriptless</bodycontent>
-      <info>输出</info>
     
       <attribute>
-       <name>roleId</name><!-- 根据角色匹配权限 -->
-       <required>false</required>
+       <name>key</name>
+       <required>true</required>
        <rtexprvalue>true</rtexprvalue>
       </attribute>
       
-       <attribute>
-       <name>phone</name>
+      <attribute>
+       <name>def</name>
        <required>true</required>
        <rtexprvalue>true</rtexprvalue>
       </attribute>

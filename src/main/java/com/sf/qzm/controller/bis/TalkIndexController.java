@@ -5,7 +5,6 @@ import javax.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 
 import com.sf.qzm.bean.bis.TalkHistory;
 import com.sf.qzm.controller.BaseController;
@@ -45,7 +44,7 @@ public class TalkIndexController extends BaseController {
 	@RequestMapping(value="/index")
 	public String index(Model model){
 
-		String id="itooth2016customer1";
+		String id="itooth2016customer";
 		String name="cesixx";
 		String code="itooth2016";
 		String sign=PasswordUtils.MD5(id+"#"+code);

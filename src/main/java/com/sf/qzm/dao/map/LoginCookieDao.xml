@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sf.qzm.dao.LoginCookieDao">
+<cache eviction="LRU" flushInterval="60000" size="1024" readOnly="true"/>
+<resultMap type="com.sf.qzm.bean.login.LoginCookie" id="cookie">
+	<id property="cookieId" column="cookieId"/>
+	<result property="loginname" column="loginname" />
+	<result property="ip" column="ip" />
+	<result property="createDate" column="createDate" />
+</resultMap>
+	<select id="getCookie" resultMap="cookie">
+		select cookieId,loginname,ip,createDate
+		from login_cookie where loginname=#{loginname} and ip=#{ip}
+	</select>
+	<insert id="save" >
+		insert into login_cookie(loginname,ip,createDate)values
+		(#{cookie.loginname},#{cookie.ip},#{cookie.createDate});
+	
+	</insert>
+	<delete id="delete">
+		delete from login_cookie where loginname=#{loginname} and ip=#{ip}
+	</delete>
+</mapper>  

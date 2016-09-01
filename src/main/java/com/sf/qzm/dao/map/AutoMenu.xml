@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sf.qzm.dao.AutoMenuDao">
+ <cache eviction="LRU" flushInterval="60000" size="1024" readOnly="true"/>  
+	<resultMap type="com.sf.qzm.bean.menu.AutoMenu" id="menu">
+		<id property="menuId" column="menuId" />
+		<result property="name" column="name" />
+		<result property="code" column="code" />
+		<result property="parentCode" column="parentCode" />
+		<result property="type" column="type" />
+		<result property="sequence" column="sequence" />
+		<result property="servletUrl" column="servletUrl" />
+		<result property="createDate" column="createDate" />
+		<result property="icon" column="icon" />
+		<result property="extend" column="extend" />
+	</resultMap>
+	<resultMap type="com.sf.qzm.dto.menu.AutoMenuDTO" id="adminMenu">
+		<id property="menuId" column="menuId" />
+		<result property="title" column="name" />
+		<result property="icon" column="icon" />
+		<result property="code" column="code" />
+		<result property="url" column="servletUrl" />
+		<result property="sequence" column="sequence" />
+		<result property="extend" column="extend" />
+		<collection property="childMenu" column="menuId_c" ofType="com.sf.qzm.dto.menu.AutoMenuDTO" >
+			<id property="menuId" column="menuId_c" />
+			<result property="title" column="name_c" />
+			<result property="url" column="servletUrl_c" />
+		<result property="extend" column="extend_c" />
+		</collection>
+	</resultMap>
+	
+	<select id="getAdminNavMenu" resultMap="adminMenu">
+		select a1.`menuId`,a1.`name`,a1.`sequence`,a1.`servletUrl`,a1.`icon`,a1.`extend`
+			,a2.menuId menuId_c,a2.name name_c,a2.servletUrl servletUrl_c,a2.`extend` extend_c
+		 from auto_menu a1 
+		 left join auto_menu a2 on a1.code=a2.parentCode and a2.type=1
+		 where 1=1 and a1.type=0 and a1.parentCode is null
+		 order by a1.sequence,a2.sequence
+	</select>
+	
+	<select id="getAdminNavMenuByUserId" resultMap="adminMenu">
+	select a1.`menuId`,a1.`name`,a1.`sequence`,a1.`servletUrl`,a1.`icon`,a1.`extend`
+			,a2.menuId menuId_c,a2.name name_c,a2.servletUrl servletUrl_c,a2.`extend` extend_c
+		 from auto_menu a1 
+		 left join auto_menu a2 on a1.code=a2.parentCode and a2.type=1
+		 and 
+		( select distinct rtm1.`menuId` from role_to_menus rtm1 left join user_to_role utr on utr.`roleId`=rtm1.`roleId`
+		 left join admin_user au1 on utr.`userId`=au1.`adminUserId`
+		   where au1.`adminUserId`=#{userId} and rtm1.`menuId`=a2.`menuId`) is not null
+		   
+		   where  ( select distinct rtm1.`menuId` from role_to_menus rtm1 left join user_to_role utr on utr.`roleId`=rtm1.`roleId`
+		 left join admin_user au1 on utr.`userId`=au1.`adminUserId`
+		   where au1.`adminUserId`=#{userId} and rtm1.`menuId`=a1.`menuId`) is not null
+		   and a1.`type`=0
+		   order by a1.sequence,a2.sequence
+		</select>
+		
+	<select id="getAdminMenu" resultMap="adminMenu">
+		select am.menuId,am.code from auto_menu am where menuId in (select menuId  from role_to_menus rtm
+		left join `user_to_role` utr on utr.`roleId`=rtm.`roleId`
+		where utr.`userId`=#{userId})
+	</select>
+	
+	<insert id="save"  useGeneratedKeys="true" keyProperty="menu.menuId">
+		insert into auto_menu(`menuId`,`name`,`code`,`parentCode`,`type`,`sequence`,`createDate`,`servletUrl`,`icon`,`extend`)
+		values
+		(#{menu.menuId},#{menu.name},#{menu.code},#{menu.parentCode},
+		#{menu.type},#{menu.sequence},#{menu.createDate},#{menu.servletUrl},#{menu.icon},#{menu.extend})
+	</insert>
+	<update id="update">
+		update auto_menu set `menuId`=#{menu.menuId}
+		<if test="menu.name!=null">
+			,`name`=#{menu.name}
+		</if>
+		<if test="menu.parentCode!=null">
+			,`parentCode`=#{menu.parentCode}
+		</if>
+		<if test="menu.type!=null">
+			,`type`=#{menu.type}
+		</if>
+		<if test="menu.sequence!=null">
+			,`sequence`=#{menu.sequence}
+		</if>
+		<if test="menu.servletUrl!=null">
+			,`servletUrl`=#{menu.servletUrl}
+		</if>
+		<if test="menu.icon!=null">
+			,`icon`=#{menu.icon}
+		</if>
+		<if test="menu.extend!=null">
+			,`extend`=#{menu.extend}
+		</if>
+		where menuId=#{menu.menuId};
+	</update>
+	<delete id="delete">
+		delete from auto_menu where menuId=#{menu.menuId} 
+	</delete>
+	<select id="getNavMenu" resultMap="menu">
+		select `menuId`,`name`,`code`,`parentCode`,`type`,`sequence`,`createDate`,`servletUrl`,`icon`,`extend`
+		 from auto_menu where  type = 0 or type=1
+	</select>
+
+	<select id="getListByParam" resultMap="menu">
+		select `menuId`,`name`,`code`,`parentCode`,`type`,`sequence`,`createDate`,`servletUrl`,`icon`,`extend`  from auto_menu where 1=1
+		<if test="menu.type!=null">
+			and `type`=#{menu.type}
+		</if>
+		order by `sequence`
+	</select>
+	<select id="getByParam" resultMap="menu" >
+		select `menuId`,`name`,`code`,`parentCode`,`type`,`sequence`,`createDate`,`servletUrl`,`icon`,`extend`  from auto_menu where 1=1
+		<if test="menu.code!=null">
+			and `code`=#{menu.code}
+		</if>
+		<if test="menu.menuId!=null">
+			and `menuId`=#{menu.menuId}
+		</if>
+	</select>
+	<select id="getCountByParam" resultType="int"></select>
+</mapper>  

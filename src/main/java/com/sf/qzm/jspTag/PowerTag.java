@@ -16,15 +16,16 @@ import com.sf.qzm.util.other.Constant;
  */
 public class PowerTag extends BodyTagSupport {
 	private static final long serialVersionUID = 1L;
-	private String uri;// 绑定菜单
+	private String code;// 绑定菜单code
 	private Integer roleId;// 绑定角色
 
-	public String getUri() {
-		return uri;
+	
+	public String getCode() {
+		return code;
 	}
 
-	public void setUri(String uri) {
-		this.uri = uri;
+	public void setCode(String code) {
+		this.code = code;
 	}
 
 	public Integer getRoleId() {
@@ -54,9 +55,8 @@ public class PowerTag extends BodyTagSupport {
 				}
 			}
 			return SKIP_BODY;
-		} else if (uri != null) {// 验证链接
-			String tempUri = uri.substring(3);
-			if (user.getMenuList().get(tempUri) != null) {
+		} else if (code != null) {// 验证链接
+			if (user.getMenuCodeMap().get(code) != null) {
 				return super.doStartTag();
 			}
 			return SKIP_BODY;

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sf.qzm.dao.BudgetDao">
+<cache eviction="LRU" flushInterval="60000" size="1024" readOnly="true"/>
+<resultMap type="com.sf.qzm.bean.constant.Budget" id="budget">
+	<id property="budgetId" column="budgetId"/>
+	<result property="start" column="start" />
+	<result property="end" column="end" />
+	<result property="name" column="name" />
+	<result property="isDelete" column="isDelete" />
+	
+</resultMap>
+	<insert id="save" >
+		insert into budget(start,end,name)
+		values(#{budget.start},#{budget.end},#{budget.name})
+	</insert>
+	<update id="update">
+		update budget set budgetId=#{budget.budgetId}
+			<if test="budget.start!=null">
+				,start=#{budget.start}
+			</if>
+			<if test="budget.end!=null">
+				,end=#{budget.end}
+			</if>
+			<if test="budget.name!=null">
+				,name=#{budget.name}
+			</if>
+			<if test="budget.isDelete!=null">
+				,isDelete=#{budget.isDelete}
+			</if>
+		where budgetId=#{budget.budgetId}
+	</update>
+	
+	<select id="get" resultMap="budget">
+		select c.budgetId,c.start,c.end,c.name,c.isDelete
+		 from budget c
+		    where (c.isDelete=0 or c.isDelete is null) 
+		    <if test="budget.budgetId!=null">
+				and c.budgetId=#{budget.budgetId}
+			</if>
+	</select>
+	<select id="list" resultMap="budget">
+			select c.budgetId,c.start,c.end,c.name,c.isDelete
+			 from budget c
+		    where (c.isDelete=0 or c.isDelete is null) 
+		    <if test="budget.budgetId!=null">
+				and c.budgetId=#{budget.budgetId}
+			</if>
+			order by c.budgetId 
+	</select>
+	<select id="count" resultType="int">
+		
+	</select>
+	
+	
+	
+</mapper>  

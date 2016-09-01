@@ -64,4 +64,12 @@ public class RoleManagerServiceImpl implements RoleManagerService{
 		return roleManagerDao.getListByParam(new RoleManager());
 	}
 
+	@Override
+	public void setRoleNameById(Integer roleId, String name) {
+		RoleManager param=new RoleManager();
+		param.setRoleId(roleId);
+		param.setRoleName(name);
+		roleManagerDao.update(param);
+	}
+
 }

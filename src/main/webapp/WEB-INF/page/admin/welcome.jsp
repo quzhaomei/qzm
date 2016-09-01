@@ -2,62 +2,66 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 <%@ page language="java" import="java.util.*" pageEncoding="utf-8"%>
+<%@taglib prefix="sf" uri="/sf" %>
 <!DOCTYPE html>
 <html lang="en">
+<!-- start: Header -->
+<%
+String path = request.getContextPath();
+String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+path+"/";
+%>
+<!-- start: Header -->
 <head>
+<base href="<%=basePath%>">
 <meta charset="utf-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-<title>系统后台管理</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<c:import url="public/p-css.jsp"></c:import>
+<link rel="stylesheet" href="<%=basePath%>css/style.css"></link>
+<title>系统后台管理 </title>
 
-<style type="text/css">
-.modal-body{max-height: 580px;}
-</style>
+
 </head>
-
+<!-- start: Header -->
 <body>
-	<!-- start: Header -->
-		<c:import url="public/p-header.jsp"></c:import>
-	<!-- start: Header -->
-
-	<div class="container-fluid-full">
-		<div class="row-fluid">
-
-			<!-- start: Main Menu -->
-			<c:import url="/welcome/menus.htmls"></c:import>
-			<!-- end: Main Menu -->
-
-			<noscript>
-				<div class="alert alert-block span10">
-					<h4 class="alert-heading">Warning!</h4>
-					<p>
-						You need to have <a href="http://en.wikipedia.org/wiki/JavaScript"
-							target="_blank">JavaScript</a> enabled to use this site.
-					</p>
-				</div>
-			</noscript>
-
-			<!-- start: Content -->
-			<div id="content" class="span10">
-				<ul class="breadcrumb">
-					<li><i class="icon-home"></i> <a href="index.html">首页</a></li>
-				<!-- 	<li><a href="#">系统设置<i class="icon-angle-right"></i> </a> -->
-					</li>
-				</ul>
-
-				<div class="row-fluid sortable">
-					<div style="height:650px;overflow:hidden;text-align:center;">
-						后台管理
-					</div>
-				</div>
+	<div id="main-container" class="menu-collapsed">
+		<div class="left-container dynmic-menu" >
 			</div>
-			
+			<div class="right-container anim">
+			<h1>这是欢迎页面</h1>
 		</div>
 	</div>
 	
-	<div class="clearfix"></div>
-	<c:import url="public/p-footer.jsp"></c:import>
+	<div class="overlay ol-dark" style="display:none;" id="modelContainer">
+		
+	</div>
+		
+	<div class="overlay ol-dark" style="display: none;" id="batch-alert">
+		<div class="alert">
+			<div class="icon-animation">
+					<div class="loading"></div>
+			
+			<div class="alerttxt">
+				数据上传中...可能需要较多时间，请耐心等待！
+			</div>
+			
+		</div>
+</div>
+</div>
+
+	<div class="overlay ol-dark hide"  id="ajaxInfo">
+		<div class="alert">
+			<div class="icon-animation">
+					<div class="loading"></div>
+			
+			<div class="alerttxt">
+				查询中！
+			</div>
+			
+		</div>
+</div>
+</div>
+	
 	<c:import url="public/p-javascript.jsp"></c:import>
+	<script type="text/javascript" src="js/call/uc-2.0.1.js"></script>
+	<script src="js/jquery.datetimepicker.full.js"></script>
 </body>
 </html>

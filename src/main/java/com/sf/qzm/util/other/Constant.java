@@ -26,4 +26,13 @@ public class Constant {
 	
 	public static final String IMG_ROOT_KEY="img_path";
 	public static final String SOCKET_PORT="socketPort";
+	
+	
+	//新版
+	public static String SESSION_LOGIN_RANDOM_CODE="loginCode";
+	public static String SESSION_LOGIN_TIME="userLoginTime";
+	public static String LOGIN_REDIRECT_URL="loginRedirectUrl";
+	public static String LOGIN_REMMBER_TAG="loginRemmberTag";
+	public static String DESTORY_SESSION="destorySession";
+	
 }

@@ -1,12 +1,13 @@
 package com.sf.test.command;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
 public class TestCommand {
+	
+	
 	public static void main(String[] args) {
 		Runtime runtime=Runtime.getRuntime(); 
 		String command="/usr/local/mysql/bin/mysqldump -uroot -p19911212 talk -r /Users/quzhaomei/Desktop/dasd/as.sql";

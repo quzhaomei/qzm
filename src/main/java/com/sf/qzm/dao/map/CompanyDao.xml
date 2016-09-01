@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sf.qzm.dao.CompanyDao">
+<cache eviction="LRU" flushInterval="60000" size="1024" readOnly="true"/>
+<resultMap type="com.sf.qzm.dto.biz.CompanyDTO" id="company">
+	<id property="companyId" column="companyId"/>
+	<result property="companyName" column="companyName" />
+	<result property="logo" column="logo" />
+	<result property="storeName" column="storeName" />
+	<result property="storePhone" column="storePhone" />
+	<result property="storeAddress" column="storeAddress" />
+	<result property="storeType" column="storeType" />
+	<result property="keeperName" column="keeperName" />
+	<result property="keeperPhone" column="keeperPhone" />
+	<result property="accept" column="accept" />
+	<result property="status" column="status" />
+	<result property="createDate" column="createDate" />
+	
+	
+	<association property="createUser" column="createUserId" javaType="com.sf.qzm.dto.admin.AdminUserDTO">
+			<id property="adminUserId" column="createUserId"/>
+			<result property="nickname" column="createNickname"/>
+		</association>
+		
+	<association property="keeper" column="keeperId" javaType="com.sf.qzm.dto.admin.AdminUserDTO">
+			<id property="adminUserId" column="keeperId"/>
+			<result property="nickname" column="keeperNickname"/>
+	</association>
+	
+	<collection property="companyTypes" column="typeId" ofType="com.sf.qzm.bean.biz.CompanyType" >
+			<id property="typeId" column="typeId" />
+			<result property="name" column="name_t" />
+		</collection>
+</resultMap>
+	<insert id="save" useGeneratedKeys="true" keyProperty="company.companyId">
+		insert into company(companyId,companyName,logo,storeName,
+		storePhone,storeAddress,storeType,keeperName,keeperPhone,accept
+		,status,createDate,createUserId,keeperId)
+		values(#{company.companyId},#{company.companyName},#{company.logo}
+		,#{company.storeName},#{company.storePhone},#{company.storeAddress}
+		,#{company.storeType},#{company.keeperName},#{company.keeperPhone}
+		,#{company.accept},#{company.status},#{company.createDate}
+		,#{company.createUserId},#{company.keeperId})
+	</insert>
+	
+	<insert id="saveType">
+		<selectKey keyProperty="id" order="AFTER"  resultType="java.lang.Integer">  
+        SELECT LAST_INSERT_ID()  
+ 		 </selectKey> 
+		  insert into company_to_type (companyId,typeId)   
+	    values  
+	    <foreach collection="typeIds"  item="typeId" index="index" separator="," >  
+	        (#{companyId},#{typeId})  
+	    </foreach> 
+	</insert>
+	
+	
+	<update id="clearType">
+		delete from company_to_type where companyId=#{companyId};
+	</update>
+	
+	<update id="update">
+		update company set companyId=#{company.companyId}
+			<if test="company.status!=null">
+				,status=#{company.status}
+			</if>
+			<if test="company.accept!=null">
+				,accept=#{company.accept}
+			</if>
+			<if test="company.keeperPhone!=null">
+				,keeperPhone=#{company.keeperPhone}
+			</if>
+			<if test="company.keeperName!=null">
+				,keeperName=#{company.keeperName}
+			</if>
+			<if test="company.keeperId!=null">
+				,keeperId=#{company.keeperId}
+			</if>
+			<if test="company.storeType!=null">
+				,storeType=#{company.storeType}
+			</if>
+			<if test="company.storeAddress!=null">
+				,storeAddress=#{company.storeAddress}
+			</if>
+			<if test="company.storePhone!=null">
+				,storePhone=#{company.storePhone}
+			</if>
+			<if test="company.storeName!=null">
+				,storeName=#{company.storeName}
+			</if>
+			<if test="company.logo!=null">
+				,logo=#{company.logo}
+			</if>
+			<if test="company.companyName!=null">
+				,companyName=#{company.companyName}
+			</if>
+			
+		where companyId=#{company.companyId}
+	</update>
+	
+	<select id="get" resultMap="company">
+		select c.companyId,c.companyName,c.logo,c.storeName,
+		c.storePhone,c.storeAddress,c.storeType,c.keeperName,c.keeperPhone,c.accept
+		,c.status,unix_timestamp(c.createDate)*1000 createDate,c.createUserId,c.keeperId,
+		au.nickname createNickname,aus.nickname keeperNickname,
+		ct.name name_t,ct.typeId
+		 from company c
+		 left join admin_user au on au.adminUserId=c.createUserId
+		 left join admin_user aus on aus.adminUserId=c.keeperId
+		 
+		 left join company_to_type ctt on ctt.companyId=c.companyId
+		 left join company_type ct on ct.typeId=ctt.typeId
+		 
+		    where 1=1
+		    <if test="company.companyId!=null">
+				and c.companyId=#{company.companyId}
+			</if>
+	</select>
+	<select id="list" resultMap="company">
+			select c.companyId,c.companyName,c.logo,c.storeName,
+		c.storePhone,c.storeAddress,c.storeType,c.keeperName,c.keeperPhone,c.accept
+		,c.status,unix_timestamp(c.createDate)*1000 createDate,c.createUserId,c.keeperId,
+		au.nickname createNickname,aus.nickname keeperNickname,
+		ct.name name_t,ct.typeId
+		 from company c
+		 left join admin_user au on au.adminUserId=c.createUserId
+		 left join admin_user aus on aus.adminUserId=c.keeperId
+		
+		 left join company_to_type ctt on ctt.companyId=c.companyId
+		 left join company_type ct on ct.typeId=ctt.typeId		 
+
+		    where 1=1
+		    <if test="company.companyId!=null">
+				and c.companyId=#{company.companyId}
+			</if>
+			order by c.companyId
+	</select>
+	<select id="count" resultType="int">
+		
+	</select>
+	
+	<update id="clear">
+	 	select 1 from dual;
+	</update>
+	
+	
+</mapper>  

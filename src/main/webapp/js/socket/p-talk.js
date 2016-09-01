@@ -45,6 +45,8 @@ jQuery("body").on("click",".popup .tools button",function(){
 	jQuery(this).prev("input[name='words']").val("");
 });
 
+jQuery(".onlinechat .digi").remove();
+
 var SF={
 		sfUser:"",
 		sfRemoteUrl:"",
@@ -57,17 +59,21 @@ var SF={
 		                  '<div class="popup chat offstage" id="talkContainner">',
 		                  '</div>'
 		                  ],
+		talkHead:[
+		          '<div class="chathead"><span class="head">#{name}</span><span class="close fa fa-times closeIcon"></span></div>'
+		          ],
 		talkUserUlTemplate_1:[
 						'<div id="chatselect"><ul>',
 						'</ul></div>'
 		                     ],                 
 		talkUserLiTemplate_1:[
-						'<li toId="#{id}"><img src="#{headImg}">',
+						'<li toId="#{id}" toName="#{name}"><img src="#{headImg}">',
 						'<span class="digi">#{count}</span>',
 						'</li>'
 		                      ],    
 		formTemplate_1:[
 			'<div id="chatapp">',
+			'<span class="remove">清空</span>',
 				'<ul class="chatarea">',
 				'</ul>',
 				'<div class="tools">',
@@ -121,21 +127,52 @@ SF.login=function(id,name,headImg,code,sign){
 							}
 							
 						}
-						
+						var toName=jQuery(this).attr("toName");//开始聊天
 						var toId=jQuery(this).attr("toId");//开始聊天
-						SF.startTalk(toId);
+						SF.startTalk(toId,toName);
 				});
+				//绑定删除消息事件
+				jQuery("#talkContainner").on("click","#chatapp .remove",function(){
+					if(SF.sfUser&&SF.toId&&!jQuery(".onlinechat").attr("toid")){
+						var curUser=jQuery("#talkContainner #chatselect li.active");
+						if(confirm("确定清空与"+curUser.attr("toName")+"的所有聊天信息吗？")){
+								SF.clearHis(SF.toId);
+								curUser.remove();
+							if(jQuery("#talkContainner #chatselect li:eq(0)")){
+								jQuery("#talkContainner #chatselect li:eq(0)").click();
+							}else{
+								jQuery("#talkContainner").addClass("offstage");
+							}
+						}
+					}
+				});
+				
 			}
 		}
 	}), 200);
 }
 //开始聊天
-SF.startTalk=function(toId){
+SF.startTalk=function(toId,name){
 	var tasks
 		if(SF.sfStart){
 			SF.toId=toId;
 			jQuery("#talkContainner #chatapp").remove();
-			jQuery(".popup").append(SF.formTemplate_1.join(""));
+			var $html=jQuery(SF.formTemplate_1.join(""));
+			if(jQuery(".onlinechat").attr("toid")){
+				$html.find(".remove").remove();
+			}
+			jQuery(".popup").append($html);
+			jQuery("#talkContainner").on("click",".chathead span.closeIcon",function(){
+				jQuery("#talkContainner").addClass("offstage");
+			});
+			name=name?name:"客服";
+			if(jQuery("#talkContainner .chathead")[0]){
+				jQuery("#talkContainner .chathead span.head").text(name);
+			}else{
+				jQuery("#talkContainner").prepend(
+						SF.talkHead.join("").replace("#{name}",name)	
+				);
+			}
 			//加载聊天记录
 			SF.sfUser.loadHis(toId);
 			if(tasks){
@@ -153,11 +190,22 @@ SF.sendMsg=function(message){
 	SF.sfUser.speak(SF.toId,message);
 }
 
+
 SF.setCallBack=function(callBack){
 	//设置消息处理
 	var stask=setInterval(function(){
 	if(SF.sfStart){
 		SF.sfUser.callback=callBack;
+		clearInterval(stask);
+			}
+	}, 500);
+}
+
+SF.clearHis=function(toId){
+	//设置消息处理
+	var stask=setInterval(function(){
+	if(SF.sfStart){
+		SF.sfUser.delHis(toId);
 		clearInterval(stask);
 			}
 	}, 500);
@@ -251,7 +299,13 @@ function talkingUser(id,name,headImg,code,sign,server){
 					}
 				});
 				if(uncheck>0){
-					$(".onlinechat .digi").text(uncheck);
+					if($(".onlinechat .digi")[0]){
+						$(".onlinechat .digi").text(uncheck);
+					}else{
+						$(".onlinechat").append('<span class="digi">'+uncheck+'</span>')
+					}
+				}else{
+					$(".onlinechat .digi").remove();
 				}
 				if(!$("#talkContainner").hasClass("service")&&!$(".onlinechat").attr("toid")){
 					$("#talkContainner").addClass("service");
@@ -259,7 +313,8 @@ function talkingUser(id,name,headImg,code,sign,server){
 				}
 				$(data).each(function(){
 					var $html=$(SF.talkUserLiTemplate_1.join("").replace("#{id}",this.fromId)
-							.replace("#{headImg}",this.fromHeadImg).replace("#{count}",this.unCheckCount));
+							.replace("#{headImg}",this.fromHeadImg).replace("#{count}",this.unCheckCount)
+							.replace("#{name}",this.fromName));
 					if(this.unCheckCount==0){
 						$html.find(".digi").remove();
 					}
@@ -290,24 +345,29 @@ function talkingUser(id,name,headImg,code,sign,server){
 					
 					//滚动到底部
 					$(".popup #chatapp .chatarea").scrollTop($(".popup #chatapp .chatarea")[0].scrollHeight);
-				}else if(data.toId=_this.id){//如果是接受信息
+				}else if(data.fromId==SF.toId){//如果是接受信息
+					//聊天信息
+					jQuery("#talkContainner .chathead span.head").text(data.fromName);
+					
 					$(".popup #chatapp .chatarea").append(SF.getMessageTempLate_1.join("")
 							.replace("#{headImg}",data.fromHeadImg).replace("#{message}",data.message)
 							.replace("#{createTime}",new Date(parseInt(data.createDate,10)))
 							.replace("#{name}",data.fromName)
 							);
 					$(".popup #chatapp .chatarea").scrollTop($(".popup #chatapp .chatarea")[0].scrollHeight);
+					//消息更新为已读
+					_this.readTalk(data.historyId);
 				}else{//接受的是其他人发的消息
 					if(!$("#talkContainner").hasClass("service")){
 						$("#talkContainner").addClass("service");
 						$("#talkContainner").prepend(SF.talkUserUlTemplate_1.join(""))
 					}
-					if($("#chatselect li[toId='"+data.toId+"']")[0]){//如果存在
-						var count=$("#chatselect li[toId='"+data.toId+"'] .digi").text();
+					if($("#chatselect li[toId='"+data.fromId+"']")[0]){//如果存在
+						var count=$("#chatselect li[toId='"+data.fromId+"'] .digi").text();
 						if(count){
-							$("#chatselect li[toId='"+data.toId+"'] .digi").text(parseInt("count",10)+1);//数量＋1
+							$("#chatselect li[toId='"+data.fromId+"'] .digi").text(parseInt(count,10)+1);//数量＋1
 						}else{
-							$("#chatselect li[toId='"+data.toId+"']").append('<span class="digi">1</span>');//数量初始化为1
+							$("#chatselect li[toId='"+data.fromId+"']").append('<span class="digi">1</span>');//数量初始化为1
 						}
 						
 					}else{//如果不存在
@@ -319,7 +379,7 @@ function talkingUser(id,name,headImg,code,sign,server){
 					//全局消息显示
 					var count=$(".onlinechat .digi").text();
 					if(count){
-						count=parseInt("count",10)+1;
+						count=parseInt(count,10)+1;
 						$(".onlinechat .digi").text(count);
 					}else{
 						$(".onlinechat").append('<span class="digi">1</span>');
@@ -361,6 +421,19 @@ function talkingUser(id,name,headImg,code,sign,server){
 		data.toId=toId;
 		//说话
 		socket.emit('load history',data);
+	};
+	//更新为已读
+	this.readTalk=function(mesId){
+		var data={};
+		data.historyId=mesId;
+		socket.emit('read talk',data);
+	};
+	
+	this.delHis=function(toId){
+		var data={};
+		data.toId=toId;
+		//说话
+		socket.emit('delete history',data);
 	};
 }
 return talkingUser;

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sf.qzm.dao.HouseStyleDao">
+<cache eviction="LRU" flushInterval="60000" size="1024" readOnly="true"/>
+<resultMap type="com.sf.qzm.bean.constant.HouseStyle" id="style">
+	<id property="styleId" column="styleId"/>
+	<result property="name" column="name" />
+	<result property="price" column="price" />
+	<result property="isDelete" column="isDelete" />
+	
+</resultMap>
+	<insert id="save" >
+		insert into house_style(name,price)
+		values(#{style.name},#{style.price})
+	</insert>
+	<update id="update">
+		update house_style set styleId=#{style.styleId}
+			<if test="style.name!=null">
+				,name=#{style.name}
+			</if>
+			<if test="style.price!=null">
+				,price=#{style.price}
+			</if>
+			<if test="style.isDelete!=null">
+				,isDelete=#{style.isDelete}
+			</if>
+		where styleId=#{style.styleId}
+	</update>
+	
+	<select id="get" resultMap="style">
+		select c.styleId,c.price,c.name,c.isDelete
+		 from house_style c
+		    where (c.isDelete=0 or c.isDelete is null) 
+		    <if test="style.styleId!=null">
+				and c.styleId=#{style.styleId}
+			</if>
+	</select>
+	<select id="list" resultMap="style">
+			select c.styleId,c.price,c.name,c.isDelete
+		 from house_style c
+		    where (c.isDelete=0 or c.isDelete is null) 
+		    <if test="style.styleId!=null">
+				and c.styleId=#{style.styleId}
+			</if>
+			order by c.styleId 
+	</select>
+	<select id="count" resultType="int">
+		
+	</select>
+	
+	
+	
+</mapper>  
