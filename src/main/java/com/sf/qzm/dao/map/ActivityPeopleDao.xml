@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sf.qzm.dao.ActivityPeopleDao">
+<cache eviction="LRU" flushInterval="60000" size="1024" readOnly="true"/>
+<resultMap type="com.sf.qzm.dto.biz.ActivityPeopleDTO" id="people">
+	<id property="peopleId" column="peopleId"/>
+	<result property="name" column="name" />
+	<result property="phone" column="phone" />
+	<result property="createDate" column="createDate" />
+	
+	<association property="channelDTO" column="channelId" javaType="com.sf.qzm.dto.biz.ChannelDTO">
+		<id property="channelId" column="channelId"/>
+		<result property="name" column="name_c"/>
+	</association>
+	<association property="activityDTO" column="activityId" javaType="com.sf.qzm.dto.biz.ActivityDTO">
+		<id property="activityId" column="activityId"/>
+		<result property="name" column="name_a"/>
+	</association>
+</resultMap>
+
+	<insert id="save" useGeneratedKeys="true" keyProperty="people.peopleId">
+		insert into activityPeople(peopleId,name,phone,
+		createDate,channelId,activityId)
+		values(#{people.peopleId},#{people.name},#{people.phone},
+		#{people.createDate},#{people.channelId},#{people.activityId})
+	</insert>
+	
+	
+	<update id="update">
+		update activityPeople set peopleId=#{people.peopleId}
+		<if test="people.name!=null">
+			,name=#{people.name}
+		</if>
+		<if test="people.channelId!=null">
+			,channelId=#{people.channelId}
+		</if>
+		<if test="people.activityId!=null">
+			,activityId=#{people.activityId}
+		</if>
+		<if test="people.phone!=null">
+			,phone=#{people.phone}
+		</if>
+		where peopleId=#{people.peopleId}
+	</update>
+	
+	<select id="get" resultMap="people">
+		select p.peopleId,p.name,p.phone,unix_timestamp(p.createDate)*1000 createDate,p.activityId,a.name name_a,
+		p.channelId,c.name name_c
+		 from activityPeople p
+		 left join activity a on p.activityId=a.activityId
+		 left join channel c on c.channelId=p.channelId
+		    where 1=1
+		    <if test="people.activityId!=null">
+				and p.activityId=#{people.activityId}
+			</if>
+		    <if test="people.phone!=null">
+				and p.phone=#{people.phone}
+			</if>
+		    <if test="people.name!=null">
+				and p.name like '%${people.name}%'
+			</if>
+		    <if test="people.channelId!=null">
+				and p.channelId=#{people.channelId}
+			</if>
+		    <if test="people.peopleId!=null">
+				and p.peopleId=#{people.peopleId}
+			</if>
+	</select>
+	<select id="getByPage" resultMap="people">
+		select p.peopleId,p.name,p.phone,unix_timestamp(p.createDate)*1000 createDate,p.activityId,a.name name_a,
+		p.channelId,c.name name_c
+		 from activityPeople p
+		 left join activity a on p.activityId=a.activityId
+		 left join channel c on c.channelId=p.channelId
+		    where 1=1
+		    <if test="page.param.activityId!=null">
+				and p.activityId=#{page.param.activityId}
+			</if>
+		    <if test="page.param.channelId!=null">
+				and p.channelId=#{page.param.channelId}
+			</if>
+		    <if test="page.param.peopleId!=null">
+				and p.peopleId=#{page.param.peopleId}
+			</if>
+			
+			 <if test="page.param.phone!=null">
+				and p.phone=#{page.param.phone}
+			</if>
+		    <if test="page.param.name!=null">
+				and p.name like '%${page.param.name}%'
+			</if>
+			
+			order by p.peopleId ${page.direction}
+			limit ${(page.pageIndex-1)*page.pageSize},${page.pageIndex*page.pageSize};
+	</select>
+	<select id="count" resultType="int">
+		select count(*)
+		 from activityPeople p
+		    where 1=1
+		    <if test="people.activityId!=null">
+				and p.activityId=#{people.activityId}
+			</if>
+		    <if test="people.channelId!=null">
+				and p.channelId=#{people.channelId}
+			</if>
+		    <if test="people.peopleId!=null">
+				and p.peopleId=#{people.peopleId}
+			</if>
+			 <if test="people.phone!=null">
+				and p.phone=#{people.phone}
+			</if>
+		    <if test="people.name!=null">
+				and p.name like '%${people.name}%'
+			</if>
+	</select>
+	
+</mapper>  

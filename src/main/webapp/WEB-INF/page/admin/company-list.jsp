@@ -15,8 +15,8 @@ var props={
 			title:"公司店铺列表",
 			url:"company/company-company.htmls?operator=list",
 			whole:true,
-//			batch:true,
 			addBtn:{powerCode:"company-company-save",callback:function(){$("#addModal").modal("show");$("#addModal").reset();}},
+//			download:{powerCode:"xxxx",url:"xxx"},
 			head:[
 			      {name:"companyName",title:"公司全称"},
 			      {name:"storeName",title:"店铺名字",sort:true},
@@ -26,11 +26,11 @@ var props={
 			      {name:"createDate",title:"入驻时间",className:"td-date",
 					style:"date",format:"yyyy-MM-dd",sort:true,remove:true,sort_default:true},
 			      {name:"keeperName",title:"负责人"},
-			      {name:"accept",title:"接单状态",style:"label",
+			      {name:"accept",title:"店铺状态",style:"label",
 			    	  group:[{title:"关闭",value:"0"}
 			    	  		,{title:"开启",value:"1"},{title:"注销",value:"2"}]}
 			      ],
-			normalOperator:[{icon:"icon-pencil",title:"修改",powerCode:"source-channel-update",
+			normalOperator:[{icon:"icon-pencil",title:"修改",powerCode:"company-company-update",
 				callback:function(data){
 					toEdit(data);
 					}}
@@ -51,7 +51,16 @@ var props={
 //			          {icon:"icon-attachment",title:"333",callback:function(data){}}]
 			
 			};
-var reactData=$("#maincontents").render("Table_data",props,function(react_obj,dom){});
+var reactData=$("#maincontents").render("Table_data",props,function(dom){
+	$(dom).find('.datetimepicker').datetimepicker({
+		lang:'ch',
+		timepicker:false,
+		format:'Y-m-d',
+		formatDate:'Y-m-d',
+		yearStart: '2016',
+		minDate:'-2016/08/02', // yesterday is minimum date
+	});
+});
 </script>
 
 		<div class="sf-modal modal modal-md" style="display:none;"  id="addModal">
@@ -309,13 +318,15 @@ $(function(){
 		param.keeperPhone=keeperPhone;
 		param.companyTypeIds=companyType;
 		param.storeType=storeType;
-		
+		var _this=this;
+		$(_this).attr("disabled","disabled");
 		$.ajax({type:"post",
 				url:"company/company-save.htmls",
 				dataType:"json",
 				contentType:"application/json",
 				data:JSON.stringify(param),
 				success:function(json){
+					$(_this).removeAttr("disabled");
 					if(json.status==1){//保存成功
 						alert(json.message)
 						$("#addModal").modal("hide");
@@ -374,12 +385,15 @@ $(function(){
 		//处理区域
 		param.zoneIds=[];
 		getCheckedZone(zoneChooseTemp,param.zoneIds);
+		var _this=this;
+		$(_this).attr("disabled","disabled");
 		$.ajax({type:"post",
 			url:"company/company-update.htmls",
 			dataType:"json",
 			contentType:"application/json",               
             data:JSON.stringify(param), 
 			success:function(json){
+				$(_this).removeAttr("disabled");
 				if(json.status==1){//保存成功
 					alert(json.message)
 					$(".right-container").reload();
@@ -400,7 +414,10 @@ $(function(){
 		if(!name){alert("请输入公司业务类别名字"); return;}
 		
 		param.name=name;
+		var _this=this;
+		$(_this).attr("disabled","disabled");
 		$.post("company/company-type-save.htmls",param,function(json){
+			$(_this).removeAttr("disabled");
 			if(json.status==1){//保存成功
 				alert(json.message)
 				$(".right-container").reload();
@@ -424,7 +441,10 @@ $(function(){
 		var param={};
 		param.name=name;
 		param.typeId=editTemp.typeId;
+		var _this=this;
+		$(_this).attr("disabled","disabled");
 		$.post("company/company-type-update.htmls",param,function(json){
+			$(_this).removeAttr("disabled");
 				if(json.status==1){//保存成功
 					alert(json.message)
 					$(".right-container").reload();
@@ -559,10 +579,6 @@ function toTypeEdit(data){
 function toEdit(data){
 	editTemp=data;
 	initEditForm(editTemp);
-	//初始化公司业务类型
-	
-
-	
 	//查找所有的接单区域
 	var param={};
 	param.companyId=data.companyId;
@@ -676,7 +692,7 @@ function initEditForm(data){
 	if(data.logo){
 		$("#logo_path").attr("src",data.logo);//设置logo
 	}else{
-		$("#logo_path").attr("src","images/shoplogo.png");//设置logo
+		$("#logo_path").attr("src","/static/images/shoplogo.png");//设置logo
 	}
 	//初始化
 	$("#editModal input[name='companyTypeIds']:checkbox").each(function(){
@@ -764,19 +780,27 @@ function getCheckedZone(zones,zonesArr){
 									</div>
 
 
-									<div class="formitem-2 withicon">
+									<div class="formitem withicon">
 									<input type="text" name="companyName" id="edit_cn" value="" maxlength="50"><label for="edit_cn"><i class="icon-business_center"></i></label>
 										<div class="placeholder">
 											公司全称
 										</div>
 									</div>
-
+									
 									<div class="formitem-2 withicon no-bd-right">
 									<input type="text" name="storeAddress" id="edit_sa" value="" maxlength="200"><label for="edit_sa"><i class="icon-location-pin"></i></label>
 										<div class="placeholder">
 											店铺地址
 										</div>
 									</div>
+									
+									<div class="formitem withicon">
+									<input type="text" name="account" disabled="disabled" id="edit_account" value="" maxlength="50"><label for="edit_account"><i class="icon-dollor"></i></label>
+										<div class="placeholder">
+											余额
+										</div>
+									</div>
+
 									
 									<div class="formitem withicon no-bd-bottom">
 										<input type="tel" name="storePhone" id="edit_sp" value=""><label for="edit_sp"><i class="icon-phone" required></i></label>

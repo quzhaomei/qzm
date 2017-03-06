@@ -14,6 +14,8 @@ public interface CustomerDao {
 	void update(@Param(value="customer")Customer customer);
 	CustomerDTO get(@Param(value="customer")Customer customer);
 	
+	void fresh();
+	
 	
 	List<CustomerDTO> getByIds(@Param(value="ids")Integer[] ids);
 	

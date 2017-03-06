@@ -11,6 +11,9 @@ public interface ChannelService {
 	ChannelDTO get(String code);
 	List<ChannelDTO> all();
 	
+	
+	List<ChannelDTO> list(Channel channel);
+	
 	void delete(Integer channelId);
 	
 	void clear();

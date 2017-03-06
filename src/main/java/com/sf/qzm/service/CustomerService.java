@@ -12,7 +12,7 @@ public interface CustomerService {
 	CustomerDTO get(Integer id);
 	CustomerDTO get(String phone);
 	List<CustomerDTO> all();
-	
+	int count(Customer customer);
 	List<CustomerDTO> getByIds(Integer[] ids);
 	
 	List<CustomerDTO> getByService(Integer serviceId);
@@ -20,7 +20,11 @@ public interface CustomerService {
 	
 	int nextCustomerCode();
 	
+	void fresh();
+	
 	void updateHouse(CustomerHouse house);
 	
 	PageDTO<List<CustomerDTO>> listByPage(PageDTO<Customer> page);
+	
+	List<CustomerDTO> download(PageDTO<Customer> page);
 }

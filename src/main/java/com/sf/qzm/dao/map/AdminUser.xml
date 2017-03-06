@@ -6,6 +6,7 @@
 		<id property="adminUserId" column="adminUserId" />
 		<result property="loginname" column="loginname" />
 		<result property="password" column="password" />
+		<result property="avatar" column="avatar" />
 		
 		<result property="nickname" column="nickname" />
 		<result property="phone" column="phone" />
@@ -33,9 +34,9 @@
 	
 	<insert id="save" useGeneratedKeys="true" keyProperty="user.adminUserId">
 		insert into admin_user
-		(adminUserId,loginname,password,nickname,phone,email,description,createDate,createUserId,status)
+		(adminUserId,loginname,avatar,password,nickname,phone,email,description,createDate,createUserId,status)
 		values
-		(#{user.adminUserId},#{user.loginname},#{user.password},#{user.nickname},
+		(#{user.adminUserId},#{user.loginname},#{user.avatar},#{user.password},#{user.nickname},
 		#{user.phone},#{user.email},#{user.description},#{user.createDate},
 		#{user.createUserId},#{user.status})
 	</insert>
@@ -46,6 +47,9 @@
 		</if>
 		<if test="user.password!=null">
 		,password=#{user.password}
+		</if>
+		<if test="user.avatar!=null">
+		,avatar=#{user.avatar}
 		</if>
 		<if test="user.nickname!=null">
 		,nickname=#{user.nickname}
@@ -75,7 +79,7 @@
 	</update>
 	<delete id="delete"></delete>
 	<select id="getListByPage" resultMap="userDTO"><!-- 查询后台用户 type==0 -->
-		select u.adminUserId,u.loginname,u.nickname,u.phone,
+		select u.adminUserId,u.loginname,u.nickname,u.phone,u.avatar,
 		u.createDate,u.updateDate,
 		u.email,u.description,u.status userStatus,
 		r.roleId,r.roleName,r.status
@@ -99,7 +103,7 @@
 	</select>
 	
 	<select id="getListByParam" resultMap="userDTO">
-		select u.adminUserId,u.loginname,u.nickname,u.password,u.phone,u.email,
+		select u.adminUserId,u.loginname,u.nickname,u.password,u.phone,u.avatar,u.email,
 		unix_timestamp(u.createDate)*1000 createDate,u.description,u.status userStatus,u.description,
 		r.roleId,r.roleName,r.status  from admin_user u 
 			left join user_to_role ur on ur.userId=u.adminUserId
@@ -114,7 +118,7 @@
 			order by u.adminUserId
 	</select>
 	<select id="getByPower" resultMap="userDTO">
-		select u.adminUserId,u.loginname,u.nickname,u.password,u.phone,u.email,
+		select u.adminUserId,u.loginname,u.nickname,u.password,u.phone,u.avatar,u.email,
 		unix_timestamp(u.createDate)*1000 createDate,u.description,u.status userStatus,u.description,
 		r.roleId,r.roleName,r.status  from admin_user u 
 			left join user_to_role ur on ur.userId=u.adminUserId
@@ -126,7 +130,7 @@
 			order by u.adminUserId
 	</select>
 	<select id="checkPower" resultMap="userDTO">
-		select u.adminUserId,u.loginname,u.nickname,u.password,u.phone,u.email,
+		select u.adminUserId,u.loginname,u.nickname,u.password,u.phone,u.avatar,u.email,
 		unix_timestamp(u.createDate)*1000 createDate,u.description,u.status userStatus,u.description,
 		r.roleId,r.roleName,r.status  from admin_user u 
 			left join user_to_role ur on ur.userId=u.adminUserId
@@ -139,7 +143,7 @@
 	
 	
 	<select id="getByParam" resultMap="userDTO">
-		select u.adminUserId,u.loginname,u.nickname,u.password,u.phone,u.email,u.description,u.status userStatus,
+		select u.adminUserId,u.loginname,u.nickname,u.password,u.phone,u.avatar,u.email,u.description,u.status userStatus,
 		r.roleId,r.roleName,r.status  from admin_user u 
 			left join user_to_role ur on ur.userId=u.adminUserId
 			left join role_manager r on r.roleId=ur.roleId
@@ -156,7 +160,7 @@
 			
 	</select>
 	<select id="mengHuLogin" resultMap="userDTO">
-		select u.adminUserId,u.loginname,u.nickname,u.password,u.phone,u.email,u.description,u.status userStatus,
+		select u.adminUserId,u.loginname,u.nickname,u.password,u.phone,u.avatar,u.email,u.description,u.status userStatus,
 		r.roleId,r.roleName,r.status  from admin_user u 
 			left join user_to_role ur on ur.userId=u.adminUserId
 			left join role_manager r on r.roleId=ur.roleId

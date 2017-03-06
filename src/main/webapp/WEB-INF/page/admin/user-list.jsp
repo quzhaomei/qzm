@@ -15,7 +15,6 @@ var props={
 			title:"当前用户列表",
 			url:"system/userIndex.htmls?operator=list",
 			whole:true,
-//			batch:true,
 			addBtn:{powerCode:"userManager-save",callback:function(){ toAdd();}},
 			head:[{name:"loginname",title:"登录名",sort:true},{name:"nickname",title:"昵称"},
 		      {name:"roles",title:"角色",style:"labels",content:"{parseRoles(roles)}",remove:true},
@@ -33,7 +32,7 @@ var props={
 			 			          {icon:"icon-trash-o",title:"删除",powerCode:"userManager-delete",callback:function(data){
 			 			        	  toDelete(data);
 			 			          }},
-			 			          {icon:"icon-lock_outline",powerCode:"userManager-status", title:"333",callback:function(data){
+			 			          {icon:"icon-lock_outline",powerCode:"userManager-status", title:"状态切换",callback:function(data){
 			 			        	  toStatus(data);
 			 			          }}]
 //			,specialOperator:[{icon:"icon-phone",title:"111",callback:function(data){}}]
@@ -73,7 +72,7 @@ var reactData=$("#maincontents").render("Table_data",props,function(dom){
 									<span></span>
 									</div>
 									<div class="form-row withicon">
-										<input type="text" placeholder="昵称" id="nickname"  autocomplete="off" maxlength="10" required><label for="nickname"><i class="icon-bubble_chart"></i></label>
+										<input type="text" placeholder="昵称" id="nickname"  autocomplete="off" maxlength="30" required><label for="nickname"><i class="icon-bubble_chart"></i></label>
 										<span></span>
 									</div>
 									<div class="form-row withicon">
@@ -90,6 +89,7 @@ var reactData=$("#maincontents").render("Table_data",props,function(dom){
 									</div>
 									<div class="form-row withicon">
 										<select class="sf-select select dropdown-container roles menu-down" id="role">
+											<option value="">请选择用户角色</option>
 											<c:forEach	items="${roles }" var="temp" varStatus="status">
 												<option value="${temp.roleId }" ${status.index==0?"selected='seleceted'":"" }>${temp.roleName }</option>
 											</c:forEach>
@@ -143,15 +143,12 @@ $(function(){
 	}
 	
 	
-	var username_reg=/^[a-zA-Z]+\w{5,49}$/;
 	var telephone_reg=/^1[3|4|5|6|7|8]\d{9}$/;
 	var password=/^.{6,50}$/;
 	var email_reg=/^(\w)+(\.\w+)*@(\w)+((\.\w{2,3}){1,3})$/;
 	
-	$("#username").validator({require:true,regExp:username_reg,callback:function(){
+	$("#username").validator({require:true,callback:function(){
 		showMsg("请输入用户名",true);
-	},callback1:function(){
-		showMsg("请输入正确格式的用户名，以字母开头字母数字混合且至少6位",true);
 	},success:function(){
 		$("#addModal .notice").hide();
 	}});
@@ -219,7 +216,10 @@ $(function(){
 		param.email=email;
 		param.roleId=role;
 		param.description=comment;
+		var _this=this;
+		$(_this).attr("disabled","disabled");
 		$.post("system/saveUser.htmls",param,function(json){
+			$(_this).removeAttr("disabled");
 			if(json.status==1){//保存成功
 				alert(json.message)
 				$("#addModal").modal("hide");
@@ -283,7 +283,10 @@ $(function(){
 		param.email=email;
 		param.description=description;
 		param.newRoleIds=roleIds;
+		var _this=this;
+		$(_this).attr("disabled","disabled");
 		$.post("system/updateUser.htmls",param,function(json){
+			$(_this).removeAttr("disabled");
 			alert(json.message);
 			if(json.status==1){//成功，刷新数据
 				$("#editModal").modal("hide");
@@ -381,8 +384,11 @@ function toStatus(data){
 		message="确定冻结吗？";
 		aim=0;
 	}
+	var _this=this;
+	$(_this).attr("disabled","disabled");
 	if(confirm(message)){
 		$.post(url,{userId:userId},function(json){
+			$(_this).removeAttr("disabled");
 			alert(json.message);
 			if(json.status==1){
 				data.status=aim;
@@ -419,7 +425,7 @@ function toStatus(data){
 										</div>
 									</div>
 									<div class="formitem withicon">
-										<input type="text" id="nickname_edit" maxlength="10" value="克利夫兰"><label for="nickname"><i class="icon-bubble_chart"></i></label>
+										<input type="text" id="nickname_edit" maxlength="30" value="克利夫兰"><label for="nickname"><i class="icon-bubble_chart"></i></label>
 										<span></span>
 										<div class="placeholder">
 											昵称

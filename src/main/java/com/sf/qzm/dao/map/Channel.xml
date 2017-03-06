@@ -73,6 +73,11 @@
 		    <if test="channel.code!=null">
 				and c.code=#{channel.code}
 			</if>
+			
+		    <if test="channel.typeId!=null">
+				and c.typeId=#{channel.typeId}
+			</if>
+			
 			order by c.createDate 
 	</select>
 	<select id="count" resultType="int">

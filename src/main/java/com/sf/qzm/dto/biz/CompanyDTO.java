@@ -31,6 +31,8 @@ public class CompanyDTO {
 	 * 店铺电话
 	 */
 	private String storePhone;
+	
+	private Integer account;
 	/**
 	 * 店铺地址
 	 */
@@ -143,6 +145,12 @@ public class CompanyDTO {
 	}
 	public void setCompanyTypes(List<CompanyType> companyTypes) {
 		this.companyTypes = companyTypes;
+	}
+	public Integer getAccount() {
+		return account;
+	}
+	public void setAccount(Integer account) {
+		this.account = account;
 	}
 	
 }

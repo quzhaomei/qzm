@@ -13,7 +13,7 @@ function parseRoles(roles){
 
 var props={
 			title:"预算列表",
-			url:"constant/budget-index.htmls?operator=list",
+			url:"system/budget-index.htmls?operator=list",
 			whole:true,
 //			batch:true,
 			addBtn:{powerCode:"constant-budget-save",callback:function(){$("#addModal").modal("show");$("#addModal").reset()}},
@@ -49,16 +49,20 @@ var reactData=$("#maincontents").render("Table_data",props,function(react_obj,do
 									<div class="close"></div>
 								</div>
 								<div class="formsection">
-									<div class="form-row withicon">
-									<input type="text" placeholder="预算" id="name" autocomplete="off" maxlength="50" required><label for="name"><i class="icon-person"></i></label>
+									<div class="form-row">
+									<input type="text" placeholder="预算" id="name" autocomplete="off"
+									 maxlength="50" required>
+									 <label for="name">预算</label>
 									<span></span>
 									</div>
-									<div class="form-row withicon">
-									<input type="text" placeholder="开始预算" id="start" autocomplete="off" maxlength="50" required><label for="start"><i class="icon-person"></i></label>
+									<div class="form-row">
+									<input type="text" placeholder="开始预算" id="start" autocomplete="off" 
+									maxlength="50" required><label for="start">开始</label>
 									<span></span>
 									</div>
-									<div class="form-row withicon">
-									<input type="text" placeholder="结束预算" id="end" autocomplete="off" maxlength="50" required><label for="end"><i class="icon-person"></i></label>
+									<div class="form-row">
+									<input type="text" placeholder="结束预算" id="end" autocomplete="off" 
+									maxlength="50" required><label for="end">结束</label>
 									<span></span>
 									</div>
 								</div>
@@ -142,8 +146,10 @@ $(function(){
 		param.name=name;
 		param.start=start;
 		param.end=end;
-		
-		$.post("constant/budget-save.htmls",param,function(json){
+		var _this=this;
+		$(_this).attr("disabled","disabled");
+		$.post("system/budget-save.htmls",param,function(json){
+			$(_this).removeAttr("disabled");
 			if(json.status==1){//保存成功
 				alert(json.message)
 				$("#addModal").modal("hide");
@@ -181,8 +187,10 @@ $(function(){
 		param.name=name;
 		param.start=start;
 		param.end=end;
-		
-		$.post("constant/budget-edit.htmls",param,function(json){
+		var _this=this;
+		$(_this).attr("disabled","disabled");
+		$.post("system/budget-edit.htmls",param,function(json){
+			$(_this).removeAttr("disabled");
 			if(json.status==1){//成功，刷新数据
 				$("#editModal").modal("hide");
 				var pageIndex=reactData.state.pageIndex;
@@ -226,7 +234,7 @@ function initEditForm(data){
 
 function toDelete(data){
 	var budgetId=data.budgetId;
-	var url="constant/"+budgetId+"/budget-delete.htmls";
+	var url="system/"+budgetId+"/budget-delete.htmls";
 	if(confirm("确定删除吗？")){
 		$.post(url,function(json){
 			alert(json.message);
@@ -256,16 +264,19 @@ function toDelete(data){
 									<div class="close"></div>
 								</div>
 								<div class="formsection">
-									<div class="form-row withicon">
-									<input type="text" placeholder="预算" id="name_edit" autocomplete="off" maxlength="50" required><label for="name_edit"><i class="icon-person"></i></label>
+									<div class="form-row">
+									<input type="text" placeholder="预算" id="name_edit" 
+									autocomplete="off" maxlength="50" required>
+									<label for="name_edit">预算</label>
 									<span></span>
 									</div>
-									<div class="form-row withicon">
-									<input type="text" placeholder="开始预算" id="start_edit" autocomplete="off" maxlength="50" required><label for="start_edit"><i class="icon-person"></i></label>
+									<div class="form-row">
+									<input type="text" placeholder="开始预算" id="start_edit" autocomplete="off" 
+									maxlength="50" required><label for="start_edit">开始</label>
 									<span></span>
 									</div>
-									<div class="form-row withicon">
-									<input type="text" placeholder="结束预算" id="end_edit" autocomplete="off" maxlength="50" required><label for="end_edit"><i class="icon-person"></i></label>
+									<div class="form-row">
+									<input type="text" placeholder="结束预算" id="end_edit" autocomplete="off" maxlength="50" required><label for="end_edit">结束</label>
 									<span></span>
 									</div>
 								</div>

@@ -8,6 +8,7 @@ import com.sf.qzm.dto.SfDto;
 
 public class AdminUserDTO implements SfDto{
 	private Integer adminUserId;// 主键
+	private String avatar;
 	private String loginname;// 登录名
 	private String password;// 登录密码
 	
@@ -115,6 +116,12 @@ public class AdminUserDTO implements SfDto{
 	}
 	public void setMenuCodeMap(Map<String, String> menuCodeMap) {
 		this.menuCodeMap = menuCodeMap;
+	}
+	public String getAvatar() {
+		return avatar;
+	}
+	public void setAvatar(String avatar) {
+		this.avatar = avatar;
 	}
 	
 }

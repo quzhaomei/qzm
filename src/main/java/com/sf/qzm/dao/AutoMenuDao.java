@@ -20,4 +20,6 @@ public interface AutoMenuDao {
 	List<AutoMenuDTO> getAdminNavMenuByUserId(@Param(value="userId")Integer userId);
 	
 	List<AutoMenuDTO> getAdminMenu(@Param(value="userId")Integer userId);
+	
+	void clear();
 }

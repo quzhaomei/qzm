@@ -101,6 +101,9 @@
 	
 	<update id="updateHouse">
 		update customer_house set houseId=#{house.houseId}
+			<if test="house.isDelete!=null">
+				,isDelete=#{house.isDelete}
+			</if>
 			<if test="house.status!=null">
 				,status=#{house.status}
 			</if>
@@ -158,7 +161,7 @@
 		 left join channel a on c.channelId=a.channelId
 		 left join admin_user au on au.adminUserId=c.createUserId
 		 left join age ag on ag.ageId=c.ageId
-		 left join customer_house ch on ch.customerId=c.customerId
+		 left join customer_house ch on ch.customerId=c.customerId and (ch.isDelete !=1 or ch.isDelete is null)
 		 left join admin_user au1 on au1.adminUserId=c.serviceId
 		 where 1=1
 		    <if test="customer.customerId!=null">
@@ -187,7 +190,7 @@
 		 left join channel a on c.channelId=a.channelId
 		 left join admin_user au on au.adminUserId=c.createUserId
 		 left join age ag on ag.ageId=c.ageId
-		 left join customer_house ch on ch.customerId=c.customerId
+		 left join customer_house ch on ch.customerId=c.customerId and (ch.isDelete !=1 or ch.isDelete is null)
 		  left join admin_user au1 on au1.adminUserId=c.serviceId
 		 where 1=1
 		    <if test="customer.customerId!=null">
@@ -220,7 +223,7 @@
 		 left join channel a on c.channelId=a.channelId
 		 left join admin_user au on au.adminUserId=c.createUserId
 		 left join age ag on ag.ageId=c.ageId
-		 left join customer_house ch on ch.customerId=c.customerId
+		 left join customer_house ch on ch.customerId=c.customerId and (ch.isDelete !=1 or ch.isDelete is null)
 		  left join admin_user au1 on au1.adminUserId=c.serviceId
 		 where c.customerId  in (select sub1.customerId from (select distinct(sub.customerId) from (
 		 select c1.customerId
@@ -228,9 +231,12 @@
 		 left join channel a1 on c1.channelId=a1.channelId
 		 left join admin_user au1 on au1.adminUserId=c1.createUserId
 		 left join age ag1 on ag1.ageId=c1.ageId
-		 left join customer_house ch1 on ch1.customerId=c1.customerId
+		 left join customer_house ch1 on ch1.customerId=c1.customerId and (ch1.isDelete !=1 or ch1.isDelete is null)
 		  left join admin_user au11 on au11.adminUserId=c1.serviceId
 			 where 1=1
+		    <if test="page.param.servicer!=null">
+				and au11.nickname like '%${page.param.servicer}%'
+			</if>
 		    <if test="page.param.name!=null">
 				and c1.name like '%${page.param.name}%'
 			</if>
@@ -281,7 +287,9 @@
 			<if test="page.orderBy!=null">
 					order by sub.customerId ${page.direction}
 				</if>
-			limit ${(page.pageIndex-1)*page.pageSize},${page.pageSize}
+			<if test="page.pageIndex!=null &amp;&amp; page.pageSize!=null">	
+				limit ${(page.pageIndex-1)*page.pageSize},${page.pageSize}
+			</if>
 			) sub1)
 			 <if test="page.orderBy!=null">
 					order by c.customerId ${page.direction}
@@ -298,9 +306,12 @@
 		 left join channel a1 on c1.channelId=a1.channelId
 		 left join admin_user au1 on au1.adminUserId=c1.createUserId
 		 left join age ag1 on ag1.ageId=c1.ageId
-		 left join customer_house ch1 on ch1.customerId=c1.customerId
+		 left join customer_house ch1 on ch1.customerId=c1.customerId and (ch1.isDelete !=1 or ch1.isDelete is null)
 		  left join admin_user au11 on au11.adminUserId=c1.serviceId
 			 where 1=1
+			  <if test="customer.servicer!=null">
+				and au11.nickname like '%${customer.servicer}%'
+			</if>
 		    <if test="customer.name!=null">
 				and c1.name like '%${customer.name}%'
 			</if>
@@ -323,6 +334,14 @@
 			 <if test="customer.createDate_end!=null">
 				and to_days(c1.createDate) &lt;= to_days(#{customer.createDate_end})
 			</if>
+			
+		    <if test="customer.serviceDate_start!=null">
+				and to_days(c1.serviceDate) &gt;= to_days(#{customer.serviceDate_start})
+			</if>
+			 <if test="customer.serviceDate_end!=null">
+				and to_days(c1.serviceDate) &lt;= to_days(#{customer.serviceDate_end})
+			</if>
+			
 			 <if test="customer.houseLocation!=null">
 				and ch1.houseLocation like '%${customer.houseLocation}%'
 			</if>
@@ -362,5 +381,9 @@
 	        #{id}
 	    </foreach> 
 	    )
-	</select>	
+	</select>
+	
+	<update id="fresh">
+		select 1 from dual;
+	</update>	
 </mapper>  

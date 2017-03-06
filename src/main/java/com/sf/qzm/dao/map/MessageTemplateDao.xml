@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sf.qzm.dao.MessageTemplateDao">
+<cache eviction="LRU" flushInterval="60000" size="1024" readOnly="true"/>
+<resultMap type="com.sf.qzm.dto.biz.MessageTemplateDTO" id="age">
+	<id property="templateId" column="templateId"/>
+	<result property="sign" column="sign" />
+	<result property="code" column="code" />
+	<result property="info" column="info" />
+	<result property="comment" column="comment" />
+	<result property="createDate" column="createDate" />
+	<result property="status" column="status" />
+	<result property="isDelete" column="isDelete" />
+	<association property="createUser" column="createUserId" javaType="com.sf.qzm.dto.admin.AdminUserDTO">
+			<id property="adminUserId" column="createUserId"/>
+			<result property="nickname" column="nickname"/>
+	</association>
+	
+</resultMap>
+	<insert id="save" >
+		insert into message_template(sign,code,info,comment,createDate,status,createUserId)
+		values(#{template.sign},#{template.code},#{template.info},#{template.comment},#{template.createDate}
+		,#{template.status},#{template.createUserId})
+	</insert>
+	<update id="update">
+		update message_template set templateId=#{template.templateId}
+			<if test="template.isDelete!=null">
+				,isDelete=#{template.isDelete}
+			</if>
+			<if test="template.status!=null">
+				,status=#{template.status}
+			</if>
+			<if test="template.comment!=null">
+				,comment=#{template.comment}
+			</if>
+			<if test="template.info!=null">
+				,info=#{template.info}
+			</if>
+			<if test="template.code!=null">
+				,code=#{template.code}
+			</if>
+			<if test="template.sign!=null">
+				,sign=#{template.sign}
+			</if>
+		where templateId=#{template.templateId}
+	</update>
+	
+	<select id="get" resultMap="age">
+		select c.templateId,c.sign,c.code,c.info,c.comment,
+		unix_timestamp(c.createDate)*1000 createDate,c.status,c.createUserId,au.nickname
+		 from message_template c
+		 left join admin_user au on au.adminUserId=c.createUserId
+		    where (c.isDelete=0 or c.isDelete is null) 
+		    <if test="template.templateId!=null">
+				and templateId=#{template.templateId}
+			</if>
+		    
+	</select>
+	<select id="list" resultMap="age">
+			select c.templateId,c.sign,c.code,c.info,c.comment,
+		unix_timestamp(c.createDate)*1000 createDate,c.status,c.createUserId,au.nickname
+		 from message_template c
+		 left join admin_user au on au.adminUserId=c.createUserId
+		    where (c.isDelete=0 or c.isDelete is null) 
+		    
+			order by c.templateId 
+	</select>
+	<select id="count" resultType="int">
+		
+	</select>
+	
+	
+	
+</mapper>  

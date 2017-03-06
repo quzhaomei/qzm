@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sf.qzm.dao.AccountHistoryDao">
+<cache eviction="LRU" flushInterval="60000" size="1024" readOnly="true"/>
+<resultMap type="com.sf.qzm.dto.biz.AccountHistoryDTO" id="accountHistory">
+	<id property="historyId" column="historyId"/>
+	<result property="tag" column="tag" />
+	<result property="orderId" column="orderId" />
+	<result property="type" column="type" />
+	<result property="price" column="price" />
+	<result property="account" column="account" />
+	<result property="createDate" column="createDate" />
+	<result property="comment" column="comment" />
+	<association property="createUser" column="createUserId" javaType="com.sf.qzm.dto.admin.AdminUserDTO">
+			<id property="adminUserId" column="createUserId"/>
+			<result property="nickname" column="createNickname"/>
+		</association>
+	<association property="company" column="toId" javaType="com.sf.qzm.dto.biz.CompanyDTO">
+			<id property="companyId" column="toId"/>
+			<result property="storeName" column="storeName"/>
+		</association>
+	
+</resultMap>
+	<insert id="save" >
+		insert into account_history(tag,orderId,price,account,createDate,comment,createUserId,toId,type)
+		values(#{history.tag},#{history.orderId},#{history.price},#{history.account},#{history.createDate},#{history.comment},
+		#{history.createUserId},#{history.toId},#{history.type})
+	</insert>
+	<update id="update">
+		update age account_history set historyId=#{history.historyId}
+		where historyId=#{history.historyId}
+	</update>
+	
+	<select id="get" resultMap="accountHistory">
+		select ah.historyId,ah.tag,ah.price,ah.account,ah.createDate,ah.comment,ah.type,
+		au.nickname createNickname,ah.createUserId,ah.toId,c.storeName
+			from account_history ah 
+			left join admin_user au on ah.createUserId=au.adminUserId
+			left join company c on c.companyId=ah.toId and ah.type=1
+			where 1=1
+			<if test="history.historyId!=null">
+				and ah.historyId=#{history.historyId}
+			</if>
+	</select>
+	
+	<select id="list" resultMap="accountHistory">
+		select ah.historyId,ah.tag,ah.price,ah.account,unix_timestamp(ah.createDate)*1000 createDate,ah.comment,ah.type,
+		ah.orderId,
+		au.nickname createNickname,ah.createUserId,ah.toId,c.storeName
+			from account_history ah 
+			left join admin_user au on ah.createUserId=au.adminUserId
+			left join company c on c.companyId=ah.toId and ah.type=1
+			where 1=1
+			<if test="page.param.historyId!=null">
+				and ah.historyId=#{page.param.historyId}
+			</if>
+			<if test="page.param.toId!=null">
+				and ah.toId=#{page.param.toId}
+			</if>
+			<if test="page.param.type!=null">
+				and ah.type=#{page.param.type}
+			</if>
+			
+			order by ah.historyId desc
+			limit ${page.pageSize*(page.pageIndex-1)},${page.pageSize}
+	</select>
+	<select id="count" resultType="int">
+		select count(*)
+			from account_history ah 
+			left join admin_user au on ah.createUserId=au.adminUserId
+			left join company c on c.companyId=ah.toId and ah.type=1
+			where 1=1
+			<if test="history.historyId!=null">
+				and ah.historyId=#{history.historyId}
+			</if>
+			<if test="history.toId!=null">
+				and ah.toId=#{history.toId}
+			</if>
+			<if test="history.type!=null">
+				and ah.type=#{history.type}
+			</if>
+		
+	</select>
+	
+	
+	
+</mapper>  

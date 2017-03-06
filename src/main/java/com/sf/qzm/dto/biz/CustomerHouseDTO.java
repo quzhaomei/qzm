@@ -1,10 +1,9 @@
 package com.sf.qzm.dto.biz;
 
-import java.util.Date;
-
 import com.sf.qzm.bean.constant.Budget;
 import com.sf.qzm.bean.constant.HouseStyle;
 import com.sf.qzm.bean.constant.Zone;
+import com.sf.qzm.dto.admin.AdminUserDTO;
 
 public class CustomerHouseDTO {
 	/**
@@ -61,12 +60,16 @@ public class CustomerHouseDTO {
 	private String log;
 	
 	private Long createDate;
-	private Integer createUserId;
+	private AdminUserDTO createUser;
 	/**
 	 * 状态，0-创建中,1-
 	 */
 	private Integer status;
 	
+	/**
+	 * 0-未派单，1-已派单
+	 */
+	private Integer softStatus;
 	/**
 	 * 是否配送了礼包，0-否，1-是
 	 */
@@ -80,6 +83,9 @@ public class CustomerHouseDTO {
 	
 	
 	
+	//查询辅助字段
+	private Integer orderNum;
+	private Integer orderUnAccept;
 	
 	public String getCallbackTips() {
 		return callbackTips;
@@ -159,11 +165,12 @@ public class CustomerHouseDTO {
 	public void setLog(String log) {
 		this.log = log;
 	}
-	public Integer getCreateUserId() {
-		return createUserId;
+	
+	public AdminUserDTO getCreateUser() {
+		return createUser;
 	}
-	public void setCreateUserId(Integer createUserId) {
-		this.createUserId = createUserId;
+	public void setCreateUser(AdminUserDTO createUser) {
+		this.createUser = createUser;
 	}
 	public Integer getStatus() {
 		return status;
@@ -194,6 +201,25 @@ public class CustomerHouseDTO {
 	}
 	public void setCreateDate(Long createDate) {
 		this.createDate = createDate;
+	}
+	
+	public Integer getOrderNum() {
+		return orderNum;
+	}
+	public void setOrderNum(Integer orderNum) {
+		this.orderNum = orderNum;
+	}
+	public Integer getOrderUnAccept() {
+		return orderUnAccept;
+	}
+	public void setOrderUnAccept(Integer orderUnAccept) {
+		this.orderUnAccept = orderUnAccept;
+	}
+	public Integer getSoftStatus() {
+		return softStatus;
+	}
+	public void setSoftStatus(Integer softStatus) {
+		this.softStatus = softStatus;
 	}
 	
 }

@@ -18,7 +18,6 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
 import com.sf.qzm.annotation.MenuTag;
 import com.sf.qzm.bean.menu.AutoMenu;
 import com.sf.qzm.service.AutoMenuService;
-import com.sf.qzm.socket.server.ServerSocket;
 
 /**
  * 当spring容器初始化完毕之后，执行的初始化事件！
@@ -34,10 +33,13 @@ public class ContextInitExecutor implements ApplicationListener<ContextRefreshed
 	public  Map<String,AutoMenu> menuMaps=new HashMap<String, AutoMenu>();
 	@Override
 	public void onApplicationEvent(ContextRefreshedEvent event) {
+		/**
+		 * 
 		ServerSocket socket=SfContextUtils.getComponent(ServerSocket.class);
 		if(socket!=null&&!socket.isStart()){
 			socket.initSocket();
 		}
+		 */
 		/**
 		 * 初始化所有的菜单
 		 */

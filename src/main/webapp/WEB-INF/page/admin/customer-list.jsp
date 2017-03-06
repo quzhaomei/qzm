@@ -12,10 +12,10 @@ function parseHouse(houses){
 		var arr=[];
 		for(var index=0;index<houses.length;index++){
 			var temp=houses[index];
-			if(temp.status==1){
-				arr.push(temp.houseLocation+'<span><i class="icon-check_circle icon-green"></i></span>');
-			}else{
+			if(temp.status==0){
 				arr.push(temp.houseLocation+'<span><i class="icon-schedule icon-red"></i></span>');
+			}else{
+				arr.push(temp.houseLocation+'<span><i class="icon-check_circle icon-green"></i></span>');
 			}
 		}
 		return arr.join("<br/>")
@@ -48,10 +48,18 @@ var props={
 			whole:false,//真分页
 			batch:[
 			       {title:"分单",icon:"icon-record_voice_over",powerCode:"sysCustomer-customer-batch-service",callback:batchToService},
-			       {title:"发送回访确认短信",icon:"icon-mail_outline",powerCode:"sysCustomer-customer-batch-msg",callback:function(data){batch_customerMsg(data)}}
-			],
+			       {title:"发送回访确认短信",icon:"icon-mail_outline",powerCode:"sysCustomer-customer-batch-msg",
+			    	   callback:function(data){batch_customerMsg(data)}}
+			       ],
 			addBtn:{powerCode:"sysCustomer-customer-save",callback:function(){$("#addModal").modal("show");$("#addModal").reset()}},
 			batchAddBtn:{powerCode:"sysCustomer-batchUpload-customer-save",callback:function(){$("#batchAdd").modal("show")}},
+			download:{
+				powerCode:"sysCustomer-customer-download",
+				url:"sysCustomer/customer-download.htmls",
+				callback:function(){
+					alert("1")
+					}
+			},
 			head:[
 			      {name:"customerCode",title:"客户编号",remove:false,search:true},
 			      {name:"name",title:"客户姓名",search:true},
@@ -66,7 +74,7 @@ var props={
 					content:"{createUser['nickname']}",remove:true,search:true},
 			      {name:"serviceDate",title:"分配时间",className:"td-datetime",
 				style:"date",format:"yyyy-MM-dd HH:mm",sort:true,remove:false},
-			      {name:"servicer",title:"跟进业务员",style:"define",content:"{servicer['nickname']}",remove:false},
+			      {name:"servicer",title:"业务员",style:"define",content:"{servicer['nickname']}",remove:true,search:true},
 			      {name:"status",title:"状态",style:"label",className:"td-label",
 			    	  group:[{className:"label label-gray label-line",title:"待分配",value:"1"}
 			    	  		,{className:"label label-gray",title:"等待回访",value:"2"}
@@ -79,15 +87,20 @@ var props={
 			normalOperator:[{icon:"icon-eye",title:"详细",powerCode:"sysCustomer-customer-update",
 				callback:function(data){
 					toEdit(data);
-					}}],
-			specialOperator:[{type:1,icon:"icon-mail_outline",title:"发送回访确认短信",powerCode:"myWork-customer-msg",
+					}}
+			],
+			specialOperator:[{type:1,icon:"icon-mail_outline",title:"发送回访确认短信",powerCode:"sysCustomer-customer-msg",
+				filter:{column:"status",values:[1,2,5]},
 				callback:function(data){
 					customerMsg(data);
 				}},
-			                 {type:1,icon:"icon-phone",title:"呼叫",powerCode:"sysCustomer-customer-call", callback:function(data){
+			        	 {type:1,icon:"icon-phone",title:"呼叫",powerCode:"sysCustomer-customer-call",
+				filter:{column:"status",values:[1,2,5]},
+					callback:function(data){
 				callCustomer(data);
 				}}
-			,{type:1,icon:"icon-record_voice_over",powerCode:"sysCustomer-customer-service",title:"分单",callback:function(data){serviceTemp=data;$("#toService").modal("show")}}
+			,{type:1,icon:"icon-record_voice_over",powerCode:"sysCustomer-customer-service",title:"分单",filter:{column:"status",values:[1,2,5]},
+				callback:function(data){serviceTemp=data;$("#toService").modal("show")}}
 			,{type:1,icon:"icon-loop changestatus",title:"状态切换",powerCode:"sysCustomer-customer-status",
 				callback:function(data){
 						changeCustomerStatus(data);
@@ -304,10 +317,10 @@ var reactData=$("#maincontents").render("Table_data",props,function(dom){
 								<div class="formsection">
 									
 									<div class="form-row withicon">
-										<select name="template" class="sf-select select dropdown-container menu-down status">
+										<select name="template" class="sf-select select dropdown-container menu-down status multiline">
 											<option value="">请选择短信内容</option>
 											<c:forEach items="${msgTemplate }" var="temp">
-												<option value="${temp.template}">${temp.value }</option>
+												<option value="${temp.templateId}">${temp.info }</option>
 											</c:forEach>
 										</select>
 									</div>
@@ -345,10 +358,10 @@ var reactData=$("#maincontents").render("Table_data",props,function(dom){
 								<div class="formsection">
 									
 									<div class="form-row withicon">
-										<select name="template" class="sf-select select dropdown-container menu-down status">
+										<select name="template" class="sf-select select dropdown-container menu-down status multiline">
 											<option value="">请选择短信内容</option>
 											<c:forEach items="${msgTemplate }" var="temp">
-												<option value="${temp.template}">${temp.value }</option>
+												<option value="${temp.templateId}">${temp.info }</option>
 											</c:forEach>
 										</select>
 									</div>
@@ -391,7 +404,10 @@ var callphone = new UCObj(window, document);
 function callCustomer(data){
 	var param={};
 	param.customerId=data.customerId;
+	var _this=this;
+	$(_this).attr("disabled","disabled");
 	$.post("sysCustomer/customer-call.htmls",param,function(json){
+		$(_this).removeAttr("disabled");
 		if(json.status==1){
 			var phone=json.data;
 			//电话外呼
@@ -461,11 +477,15 @@ $(function(){
 			param.nextcallTime=nextcallTime;
 		}
 		param.nextcallInfo=info;//回访备注
+		var _this=this;
+		$(_this).attr("disabled","disabled");
 		$.post("sysCustomer/customer-status.htmls",param,function(json){
+			$(_this).removeAttr("disabled");
 			alert(json.message);
 			if(json.status==1){
 				$("#changeStatus").modal("hide");
-				reactData.reload("last");//重新加载数据
+				var pageIndex=reactData.state.pageIndex;
+				reactData.reload(pageIndex);//重新加载数据,并跳转当页
 			}
 		},"json")
 	});
@@ -523,7 +543,10 @@ $(function(){
 			var param={};
 			param.serviceId=serviceId;
 			param.customerId=data.customerId;
+			var _this=this;
+			$(_this).attr("disabled","disabled");
 			$.post("sysCustomer/customer-service.htmls",param,function(json){
+				$(_this).removeAttr("disabled");
 				alert(json.message);
 				if(json.status==1){
 					$("#toService").modal("hide");
@@ -537,11 +560,15 @@ $(function(){
 	$("#serviceBatchSave").on("click",function(){
 		var ids=$(this).data("ids");//获取数据
 		var serviceId=$("#serviceBatchSelect").val();
+		
 		if(serviceId&&ids){
 			var param={};
 			param.serviceId=serviceId;
 			param.customerIds=ids;
+			var _this=this;
+			$(_this).attr("disabled","disabled");
 			$.post("sysCustomer/customer-batch-service.htmls",param,function(json){
+				$(_this).removeAttr("disabled");
 				alert(json.message);
 				if(json.status==1){
 					$("#toBatchService").modal("hide");
@@ -560,11 +587,15 @@ $(function(){
 			alert("请选择短信内容");return;
 		}
 		var data=$("#sendMsgModal").data("data");
+		if(!data){alert("请选择客户");return}
 		if(confirm("确认向客户 " +data.name+" 发送短信吗？")){
 			var param={};
 			param.customerId=data.customerId;
-			param.template=template;
+			param.templateId=template;
+			var _this=this;
+			$(_this).attr("disabled","disabled");
 			$.post("sysCustomer/customer-msg.htmls",param,function(json){
+				$(_this).removeAttr("disabled");
 					alert(json.message);
 					if(json.status==1){
 						$("#sendMsgModal").modal("hide");
@@ -583,8 +614,11 @@ $(function(){
 		if(confirm("确认发送短信吗？")){
 			var param={};
 			param.ids=ids;
-			param.template=template;
+			param.templateId=template;
+			var _this=this;
+			$(_this).attr("disabled","disabled");
 			$.post("sysCustomer/batch-customer-msg.htmls",param,function(json){
+				$(_this).removeAttr("disabled");
 				alert(json.message);
 					if(json.status==1){
 						$("#batch_sendMsgModal").modal("hide");
@@ -613,7 +647,10 @@ $(function(){
 		param.phone=phone;
 		param.info=info;
 		param.channelId=channelId;
+		var _this=this;
+		$(_this).attr("disabled","disabled");
 		$.post("sysCustomer/customer-save.htmls",param,function(json){
+			$(_this).removeAttr("disabled");
 			if(json.status==1){//保存成功
 				alert(json.message)
 				$("#addModal").modal("hide");
@@ -628,13 +665,12 @@ $(function(){
 
 	//保存修改
 	$("#editSave").on("click",function(){
-		var name=$("#editModal #name_edit").val();
-//		var code=$("#editModal #customerCode_edit").val();
 		var info=$("#editModal #info_edit").val();
 		var ageId=$("#editModal #ageId_edit").val();
 		var carCode=$("#editModal #carCode_edit").val();
 		var gender=$("#editModal #gender_edit").val();
 		var integration=$("#editModal #integration_edit").val();
+		var name=$("#editModal #name_edit").val();
 		var phone=$("#editModal #phone_edit").val();
 		
 		if(!name){
@@ -646,9 +682,8 @@ $(function(){
 		param.customerId=editTemp.customerId;
 		
 		param.name=name;
-//		param.code=code;
-		param.info=info;
 		param.phone=phone;
+		param.info=info;
 		if(ageId!="null"){
 		param.ageId=ageId;
 		}
@@ -731,10 +766,10 @@ $(function(){
 //				alert("请填写装修面积");error=true;
 //				return;
 //			}
-//			if(!area.match(/\d+/)){
-//				alert("装修面积为数字");error=true;
-//				return;
-//			}
+			if(area&&!area.match(/^\d+$/)){
+				alert("装修面积为数字");error=true;
+				return;
+			}
 //			if(designType==""){
 //				alert("请选择专修类别");error=true;
 //				return;
@@ -756,17 +791,20 @@ $(function(){
 		});
 		param.houses=houses;
 		if(error){return;}
+		var _this=this;
+		$(_this).attr("disabled","disabled");
 		$.ajax({type:"post",
 				url:"sysCustomer/customer-update.htmls",
 				dataType:"json",
 				contentType:"application/json",               
 	            data:JSON.stringify(param), 
 				success:function(json){
+					$(_this).removeAttr("disabled");
 					if(json.status==1){//成功，刷新数据;
 						alert(json.message);
-						$("#editModal").modal("hide");
-						var pageIndex=reactData.state.pageIndex;
-						reactData.reload(pageIndex);//重新加载数据,并跳转当页
+					//	$("#editModal").modal("hide");
+						freshEdit(json.data);
+						$("#editModal").data("data",json.data);
 					}else{
 						alert(json.message);
 					}
@@ -788,37 +826,149 @@ $(function(){
 	//删除房产
 	$("#editModal").on("click",".data-delete",function(){
 		if(confirm("确定删除吗？")){
-			$(this).parent(".data-form").remove();
+			$(this).parents(".data-form").remove();
 		}
 	});
 	
 	//发布房产
 	$("#editModal").on("click",".publish_house",function(){
+		
+		var name=$("#editModal #name_edit").val();
+		var phone=$("#editModal #phone_edit").val();
+		
+		if(!name){
+			alert("请输入用户名称");
+			return;
+		}
+		var param={};
+		param.customerId=editTemp.customerId;
+		param.name=name;
+		param.phone=phone;
+		
+		var houses=[];
+		//查看是否有新增的房产
+		var $house= $(this).parents(".data-form");
+			var house={};
+			var houseId=$house.find("[name='houseId']").val();
+				house.houseId=houseId;
+				house.status=1;//已发布
+			var zoneId=$house.find("[name='zoneId']").val();
+			house.zoneId=zoneId;
+			
+			var houseInfo=$house.find("[name='houseInfo']").val();
+			house.houseInfo=houseInfo;
+			
+			var houseLocation=$house.find("[name='houseLocation']").val();
+			house.houseLocation=houseLocation;
+			
+			var houseTypeId=$house.find("[name='houseTypeId']").val();
+			house.houseTypeId=houseTypeId;
+			
+			var isNew=$house.find("[name='isNew']").val();
+			house.isNew=isNew;
+			
+			var area=$house.find("[name='area']").val();
+			house.area=area;
+			
+			var designType=$house.find("[name='designType']").val();
+			house.designType=designType;
+			
+			var budgetId=$house.find("[name='budgetId']").val();
+			house.budgetId=budgetId;
+			
+			var hasSoft=$house.find("[name='hasSoft']").val();
+			house.hasSoft=hasSoft;
+			
+			var comment=$house.find("[name='comment']").val();
+			house.comment=comment;
+			
+			var gift=$house.find("[name='gift']").val();
+			house.gift=gift;
+			var giftAddress=$house.find("[name='giftAddress']").val();
+			house.giftAddress=giftAddress;
+			if(!zoneId){
+				alert("请选择区域");error=true;
+				return;
+			}
+			if(!houseInfo){
+				alert("请填写楼盘信息");error=true;
+				return;
+			}
+			if(isNew==""){
+				alert("请选择房屋类别");error=true;
+				return;
+			}
+			if(area==""){
+				alert("请填写装修面积");error=true;
+				return;
+			}
+			if(area&&!area.match(/^\d+$/)){
+				alert("装修面积为数字");error=true;
+				return;
+			}
+			if(comment==""){
+				alert("请选择需求备注");error=true;
+				return;
+			}
+			
+			houses.push(house);
+		param.houses=houses;
+		var _this=this;
+		$(_this).attr("disabled","disabled");
+		$.ajax({type:"post",
+				url:"myWork/customer-update.htmls",
+				dataType:"json",
+				contentType:"application/json",               
+	            data:JSON.stringify(param), 
+				success:function(json){
+					$(_this).removeAttr("disabled");
+					if(json.status==1){//成功，刷新数据;
+						alert("发布成功！");
+							freshEdit(json.data);
+							$("#editModal").data("data",json.data);
+					}else{
+						
+						alert(json.message);
+					}
+
+				}
+			});
+	});
+	
+	//删除未发布的房产
+	$("#editModal").on("click",".data-delete-rel",function(){
 		var _this=this;
 		var house=$(this).parents(".data-form").data("house");
-		if(house&&confirm("确定发布吗？")){
+		if(house&&confirm("确定删除吗？")){
 			var param={};
 			param.houseId=house.houseId;
-			param.operator="publishHouse";
-			
+			param.operator="deleteHouse";
+			var _this=this;
+			$(_this).attr("disabled","disabled");
 			$.post("sysCustomer/customer-index.htmls",param,function(json){
+				$(_this).removeAttr("disabled");
 				alert(json.message)
 				if(json.status==1){
-					$(_this).parent().empty().append('<button class="btn btn-sm btn-green" readonly>'+
-							'已发布</button>')
+			//		$(_this).parent().empty().append('<button class="btn btn-sm btn-green" readonly>'+'已发布</button>')
+					freshEdit(json.data);
 				}
 			},"json")
 		}
 	});
+	
 });
 
-
-
+var newIndex=1;
 function addHouse(){
 	$("#editModal .form-footer").before($("#addCustomerHouseTemplate").html());
 	$("#editModal select").each(function(){
 		$(this).smartSelect();
 	});
+	newIndex++;
+	$("#editModal .form-footer").prev("fieldset").attr("id","newIndex"+newIndex);
+    var t = $("#newIndex"+newIndex).offset().top;
+
+    $(".panel-content").scrollTop(t)
 }	
 
 function editHouse(data){
@@ -830,10 +980,12 @@ function editHouse(data){
 	$dataForm.find("#zoneId_2").attr("default_",data.zoneParentId);
 	$dataForm.find("#zoneId").attr("default_",data.zoneId);
 	var $statusDiv=$dataForm.find(".house_status_div");
-	if(data.status==1){
-		$statusDiv.append('<button class="btn btn-sm btn-green" readonly>已发布</button>');
-	}else{
+	if(data.status==0){
 		$statusDiv.append('<button class="btn btn-sm publish_house">发布</button>');
+		$statusDiv.append('<button class="btn btn-sm data-delete-rel">删除</button>');
+	}else{
+		$statusDiv.append('<button class="btn btn-sm btn-green" readonly>已发布</button>');
+		$dataForm.find("select[name='hasSoft']").attr("disabled","disabled");
 	}
 	$dataForm.initForm(data);
 	$("#editModal select").each(function(){
@@ -853,6 +1005,7 @@ function toEdit(data){
 			if(json){
 				data.houses=json;
 				editTemp=data;
+				$("#editModal").data("data",data);
 				$("#editModal").modal('show');
 				initEditForm(editTemp);
 				//初始化区域
@@ -867,6 +1020,30 @@ function toEdit(data){
 	}
 }
 
+function freshEdit(data){
+	if(!data){data=$("#editModal").data("data");}
+	//查找房产信息
+	if(data.houses&&data.houses.length>0){
+		var customerId=data.customerId;
+		var param={};param.customerId=customerId;param.operator="getHouse";
+		$.post("sysCustomer/customer-index.htmls",param,function(json){
+			if(json){
+				data.houses=json;
+				editTemp=data;
+				initEditForm(editTemp);
+				var pageIndex=reactData.state.pageIndex;
+				reactData.reload(pageIndex);//重新加载数据,并跳转当页
+				//初始化区域
+			}else{
+				alert("数据异常，请刷新页面！");
+			}
+		},"json");
+	}else{//无房产信息
+		editTemp=data;
+		initEditForm(editTemp);
+	}
+}
+
 
 function editReset(){
 	var data=editTemp;
@@ -874,6 +1051,7 @@ function editReset(){
 }
 
 function initEditForm(data){
+$("#editModal .customer_name").text(data.name?data.name:"客户");
 //初始化状态
 $("#editModal #editStatus .label").hide();
 $("#editModal #editStatus .label[value='"+data.status+"']").show();
@@ -973,7 +1151,7 @@ function toStatus(data){
 		<div class="modal-full sf-modal"  id="editModal" style="display: none;">
 			<div class="panel">
 				<div class="panel-title">
-					<span>修改客户
+					<span>修改<strong class="customer_name">客户</strong>的信息
 					
 					<div class="label-right" id="editStatus">
 						<div class="label label-line label-gray" value="1">
@@ -1038,7 +1216,7 @@ function toStatus(data){
 									</div>
 									<div class="formitem withicon">
 										<select id="gender_edit" class="sf-select dropdown-container menu-down select">
-											<option value="null">未选择</option>
+											<option value="-1">未选择</option>
 											<option value="1">男</option>
 											<option value="0">女</option>
 										</select>
@@ -1050,7 +1228,7 @@ function toStatus(data){
 
 									<div class="formitem withicon">
 										<select id="ageId_edit" class="sf-select dropdown-container menu-down select">
-											<option value="null">未选择</option>
+											<option value="-1">未选择</option>
 											<c:forEach items="${ages }" var="age">
 												<option value="${age.ageId }">${age.name }</option>
 											</c:forEach>
@@ -1140,7 +1318,7 @@ function toStatus(data){
 														</c:forEach>
 													</select>
 												<div class="placeholder">
-													城市
+													城市＊
 												</div>
 												</div>
 
@@ -1151,7 +1329,7 @@ function toStatus(data){
 														<option value="">请选择</option>
 													</select>
 													<div class="placeholder">
-														区域
+														区域＊
 													</div>
 												</div>
 
@@ -1160,7 +1338,7 @@ function toStatus(data){
 														<option value="">请选择</option>
 														</select>
 													<div class="placeholder">
-														区域细分
+														区域细分＊
 													</div>
 												</div>
 
@@ -1168,7 +1346,7 @@ function toStatus(data){
 													<input type="text" name="houseInfo" placeholder="请输入楼盘信息">
 													
 													<div class="placeholder">
-														楼盘信息
+														楼盘信息＊
 													</div>
 												</div>
 
@@ -1182,7 +1360,7 @@ function toStatus(data){
 
 												<div class="formitem">
 														<select  name="houseTypeId" class="dropdown-container menu-down select">
-															<option value="">请选择</option>
+															<option value="-1">请选择</option>
 															<c:forEach items="${styles }" var="style">
 																<option value="${style.styleId }">${style.name }</option>
 															</c:forEach>
@@ -1199,7 +1377,7 @@ function toStatus(data){
 															<option value="0">二手房</option>
 														</select>
 													<div class="placeholder">
-														房屋类别
+														房屋类别＊
 													</div>
 												</div>
 
@@ -1208,14 +1386,14 @@ function toStatus(data){
 													<input type="text" name="area" placeholder="请输入装修面积">
 													<span>m²</span>
 													<div class="placeholder">
-														装修面积
+														装修面积＊
 													</div>
 												</div>
 
 												<div class="formitem">
 												
 												<select name="designType" class="dropdown-container menu-down select">
-														<option value="">请选择</option>
+														<option value="-1">请选择</option>
 														<option value="0">半包</option>
 														<option value="1">全包</option>
 													</select>
@@ -1228,7 +1406,7 @@ function toStatus(data){
 
 												<div class="formitem">
 													<select name="budgetId" class="dropdown-container menu-down select">
-														<option value="">请选择</option>
+														<option value="-1">请选择</option>
 														<c:forEach items="${budgets }" var="budget">
 														<option value="${budget.budgetId }">${budget.name }</option>
 														</c:forEach>
@@ -1241,7 +1419,7 @@ function toStatus(data){
 
 												<div class="formitem">
 												<select name="hasSoft" class="dropdown-container menu-down select">
-														<option value="">请选择</option>
+														<option value="-1">请选择</option>
 														<option value="1">是</option>
 														<option value="0">否</option>
 													</select>
@@ -1258,7 +1436,7 @@ function toStatus(data){
 											<div class="form-row">
 												<textarea name="comment" id="user-comment"></textarea>
 												<div class="placeholder">
-													需求备注
+													需求备注＊
 												</div>
 											</div>
 											<div class="form-row">
@@ -1271,7 +1449,7 @@ function toStatus(data){
 											<div class="form-row-special">
 												<div class="formitem-1 no-bottom-line">
 												<select class="dropdown-container menu-down select" name="gift">
-														<option value="">请选择</option>
+														<option value="-1">请选择</option>
 														<option value="1">是</option>
 														<option value="0">否</option>
 													</select>
@@ -1311,15 +1489,15 @@ function toStatus(data){
 										</div>
 										<div class="field-content">
 											<div>
-											<!-- 
+											
 												<div class="formitem">
-													<input type="text" value="ND129837" disabled>
+													<input type="text" value="创建中…" disabled>
 													<span></span>
 													<div class="placeholder">
 														需求ID
 													</div>
 												</div>
-												 -->
+												
 												<div class="formitem">
 													<select id="zoneId_1" class="dropdown-container menu-down select"
 													 aimId="$(this).parent('.formitem').next('.formitem').find('select')"
@@ -1330,7 +1508,7 @@ function toStatus(data){
 														</c:forEach>
 													</select>
 												<div class="placeholder">
-													城市
+													城市＊
 												</div>
 												</div>
 
@@ -1341,7 +1519,7 @@ function toStatus(data){
 														<option value="">请选择</option>
 													</select>
 													<div class="placeholder">
-														区域
+														区域＊
 													</div>
 												</div>
 
@@ -1350,7 +1528,7 @@ function toStatus(data){
 														<option value="">请选择</option>
 														</select>
 													<div class="placeholder">
-														区域细分
+														区域细分＊
 													</div>
 												</div>
 
@@ -1358,7 +1536,7 @@ function toStatus(data){
 													<input type="text" name="houseInfo" placeholder="请输入楼盘信息">
 													
 													<div class="placeholder">
-														楼盘信息
+														楼盘信息＊
 													</div>
 												</div>
 
@@ -1389,7 +1567,7 @@ function toStatus(data){
 															<option value="0">二手房</option>
 														</select>
 													<div class="placeholder">
-														房屋类别
+														房屋类别＊
 													</div>
 												</div>
 
@@ -1398,7 +1576,7 @@ function toStatus(data){
 													<input type="text" name="area" placeholder="请输入装修面积">
 													<span>m²</span>
 													<div class="placeholder">
-														装修面积
+														装修面积＊
 													</div>
 												</div>
 
@@ -1448,7 +1626,7 @@ function toStatus(data){
 											<div class="form-row">
 												<textarea name="comment" id="user-comment"></textarea>
 												<div class="placeholder">
-													需求备注
+													需求备注＊
 												</div>
 											</div>
 
@@ -1474,7 +1652,7 @@ function toStatus(data){
 									</div>
 							</div>
 							<div class="btnarea-right house_status_div">
-							<button class="btn btn-md data-delete">
+							<button class="btn btn-sm data-delete">
 												<i class="icon-trash-o"></i> 删除
 										</button>
 								</div>

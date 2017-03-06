@@ -20,8 +20,12 @@ public class SmsUtils {
 	public static List<MsgTemplate> template=new ArrayList<MsgTemplate>();
 	static{
 		
-		template.add(new MsgTemplate("SMS_13800456", 
-				"${name}，感谢您参加本次家具展会活动，报名已成功，后续有专员联系，请保持手机畅通。"));
+//		template.add(new MsgTemplate("SMS_13800456", "${name}，感谢您参加本次家具展会活动，报名已成功，后续有专员联系，请保持手机畅通。"));
+		
+		template.add(new MsgTemplate("SMS_14270842", 
+				"9.7-9.11到展会买家具，工厂直供价，多省不止50%！百万家电满额即赠！38届国际家具博览会唯一指定分会场。"));
+		template.add(new MsgTemplate("SMS_14205664", 
+				"${name}，感谢您参加本次家具展会活动，报名已成功，凭此短信领取签到奖品。9.7-9.11吉盛伟邦国际家具展 青浦嘉松中路5369号家具村"));
 		
 		template.add(new MsgTemplate("SMS_14195148", 
 				"9月7-11日，到展会买家具，工厂直供价，多省不止50%！百万家电满额即送！http://t.cn/Rteltz8 回复T退订"));
@@ -53,7 +57,48 @@ public class SmsUtils {
 			e.printStackTrace();
 		}
 		SendMsgResult result=new SendMsgResult();
-		System.out.println(rsp.getBody());
+		Map<String,Object> map=JsonUtils.parseJSON2Map(rsp.getBody());
+		Object response=null;
+		response= map.get("alibaba_aliqin_fc_sms_num_send_response");
+		if(response!=null){
+			result.setSuccess(1);
+		}else{
+			response= map.get("error_response");
+			if(response!=null){
+				result.setSuccess(0);
+				Map<String,Object> info=(Map<String, Object>) response;
+				result.setMessage((String)info.get("sub_msg"));
+			}else{
+				result.setSuccess(0);
+				result.setMessage("短信发送异常，请联系管理员！");
+			}
+		}
+		return result;
+	}
+	
+	/**
+	 * 0表示成功
+	 * @param name
+	 * @param phone
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public static SendMsgResult  sendMsg(String name,String phone,String template,String signName) {
+		TaobaoClient client = new DefaultTaobaoClient(url, appkey, secret);
+		AlibabaAliqinFcSmsNumSendRequest req = new AlibabaAliqinFcSmsNumSendRequest();
+		req.setExtend( "jswb" );
+		req.setSmsType( "normal" );
+		req.setSmsFreeSignName( signName );
+		req.setSmsParamString( "{name:'"+name+"'}" );
+		req.setRecNum(phone);
+		req.setSmsTemplateCode(template);
+		AlibabaAliqinFcSmsNumSendResponse rsp=null;
+		try {
+			rsp = client.execute(req);
+		} catch (ApiException e) {
+			e.printStackTrace();
+		}
+		SendMsgResult result=new SendMsgResult();
 		Map<String,Object> map=JsonUtils.parseJSON2Map(rsp.getBody());
 		Object response=null;
 		response= map.get("alibaba_aliqin_fc_sms_num_send_response");

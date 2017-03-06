@@ -26,6 +26,13 @@
 				and c.typeId=#{type.typeId}
 			</if>
 	</select>
+	<select id="getById" resultMap="type">
+		select c.typeId,c.name
+		 from company_type c
+		    where 1=1
+				and c.typeId=#{typeId}
+	</select>
+	
 	<select id="list" resultMap="type">
 			select c.typeId,c.name
 		 from company_type c

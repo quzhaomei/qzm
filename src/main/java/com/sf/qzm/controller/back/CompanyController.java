@@ -265,13 +265,7 @@ public class CompanyController extends BaseController {
 		return result;
 	}
 
-	/**
-	 * 我的店铺
-	 */
-	@MenuTag(code = "company-my-company", name = "我的店铺", sequence = 4, type = 1)
-	@RequestMapping(value = "/company-my-company")
-	public String myCompany(String operator, Map<String, Object> map) {
-		return "admin/company-list";
-	}
+	
+	
 
 }

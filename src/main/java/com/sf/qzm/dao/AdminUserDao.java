@@ -30,4 +30,10 @@ public interface AdminUserDao {
 	 
 	 AdminUserDTO checkPower(@Param("powerCode")String powerCode,
 			 @Param("adminUserId") Integer adminUserId);
+	 
+	 
+	 /**日常统计*/
+	 
+	 
+	 
 }

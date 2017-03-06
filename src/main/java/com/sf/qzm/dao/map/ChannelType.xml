@@ -33,6 +33,7 @@
 			</if>
 		where typeId=#{type.typeId}
 	</update>
+	
 	<select id="get" resultMap="type">
 		select c.typeId,c.name,c.isDelete,c.info,unix_timestamp(c.createDate)*1000 createDate,c.createUserId,au.nickname
 		 from channel_type c left join admin_user au on c.createUserId=au.adminUserId

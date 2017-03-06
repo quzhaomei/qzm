@@ -84,5 +84,18 @@ public class AutoMenuServiceImpl implements AutoMenuService {
 		return autoMenuDao.getAdminMenu(userId);
 	}
 
+	@Override
+	public AutoMenu getByCode(String code) {
+		if(code==null){return null;}
+		AutoMenu param=new AutoMenu();
+		param.setCode(code);
+		return autoMenuDao.getByParam(param);
+	}
+
+	@Override
+	public void clear() {
+		autoMenuDao.clear();
+	}
+
 
 }

@@ -17,6 +17,8 @@ public interface AutoMenuService extends BaseService<AutoMenu, AutoMenu>{
 	 */
 	List<AutoMenu> getNavMenu();
 	
+	AutoMenu getByCode(String code);
+	
 	/**
 	 * 查询全部导航菜单
 	 * @return
@@ -29,11 +31,15 @@ public interface AutoMenuService extends BaseService<AutoMenu, AutoMenu>{
 	 */
 	List<AutoMenuDTO> getAdminNavMenu(Integer userId);//查询菜单
 	
+	
+	
 	/**
 	 * 查询用户所有菜单
 	 * @param userId
 	 * @return
 	 */
 	List<AutoMenuDTO> getAdminMenu(Integer userId);
+	
+	void clear();
 	
 }

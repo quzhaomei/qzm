@@ -1,0 +1,316 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sf.qzm.dao.OrderDao">
+	<cache eviction="LRU" flushInterval="60000" size="1024" readOnly="true" />
+	<resultMap type="com.sf.qzm.dto.biz.OrderDTO" id="order">
+		<id property="orderId" column="orderId" />
+		<result property="type" column="type" />
+		<result property="price" column="price" />
+		<result property="orderCode" column="orderCode" />
+		<result property="createDate" column="createDate" />
+		<result property="acceptStatus" column="acceptStatus" />
+		<result property="acceptDate" column="acceptDate" />
+		<result property="isSuccess" column="isSuccess" />
+		<result property="successDate" column="successDate" />
+		<result property="info" column="info" />
+		<result property="log" column="log" />
+		
+		<association property="companyType" column="typeId"
+			javaType="com.sf.qzm.bean.biz.CompanyType">
+			<id property="typeId" column="typeId" />
+			<result property="name" column="name_t" />
+		</association>
+		<association property="createUser" column="createUserId"
+			javaType="com.sf.qzm.dto.admin.AdminUserDTO">
+			<id property="adminUserId" column="createUserId" />
+			<result property="nickname" column="createNickname" />
+		</association>
+		<association property="house" column="houseId"
+			javaType="com.sf.qzm.dto.biz.CustomerHouseDTO">
+			<id property="houseId" column="houseId" />
+			<result property="houseLocation" column="houseLocation" />
+			<association property="houseStyle" column="houseTypeId" javaType="com.sf.qzm.bean.constant.HouseStyle">
+				<id property="styleId" column="houseTypeId" />
+				<result property="name" column="name_hst" />
+			</association>
+		</association>
+		<association property="company" column="companyId"
+			javaType="com.sf.qzm.dto.biz.CompanyDTO">
+			<id property="companyId" column="companyId" />
+			<result property="storeName" column="storeName" />
+		</association>
+		<association property="designer" column="designerId"
+			javaType="com.sf.qzm.dto.biz.DesignerDTO">
+			<id property="designerId" column="designerId" />
+		</association>
+	</resultMap>
+
+	<resultMap type="com.sf.qzm.dto.biz.CompanyServiceDTO" id="companyService">
+		<id property="companyId" column="companyId" />
+		<result property="storeName" column="storeName" />
+		<result property="storeFee" column="storeFee" />
+		<result property="price" column="price" />
+		<result property="orderId" column="orderId" />
+
+		<result property="monthCount" column="monthCount" />
+		<result property="tempId" column="tempId" />
+		<collection property="companyTypes" column="typeId"
+			ofType="com.sf.qzm.bean.biz.CompanyType">
+			<id property="typeId" column="typeId" />
+			<result property="name" column="name_t" />
+		</collection>
+	</resultMap>
+
+	<insert id="save">
+		insert into
+		`order`(houseId,toId,type,price,createUserId,createDate,log,acceptStatus,typeId,orderCode)
+		values(#{order.houseId},#{order.toId},#{order.type},#{order.price},#{order.createUserId}
+		,#{order.createDate},#{order.log},#{order.acceptStatus},#{order.typeId},#{order.orderCode})
+	</insert>
+	<update id="update">
+		update `order` set orderId=#{order.orderId}
+		<if test="order.price!=null">
+			,price=#{order.price}
+		</if>
+		<if test="order.acceptStatus!=null">
+			,acceptStatus=#{order.acceptStatus}
+		</if>
+		<if test="order.acceptDate!=null">
+			,acceptDate=#{order.acceptDate}
+		</if>
+		<if test="order.isSuccess!=null">
+			,isSuccess=#{order.isSuccess}
+		</if>
+		<if test="order.successDate!=null">
+			,successDate=#{order.successDate}
+		</if>
+		<if test="order.info!=null">
+			,info=#{order.info}
+		</if>
+		<if test="order.log!=null">
+			,log=#{order.log}
+		</if>
+		where orderId=#{order.orderId}
+	</update>
+
+	<select id="get" resultMap="order">
+		select o.orderId,o.type,o.price,unix_timestamp(o.createDate)*1000 createDate,unix_timestamp(o.acceptDate)*1000 acceptDate,o.acceptStatus,
+			o.isSuccess,unix_timestamp(o.successDate)*1000 successDate,o.info,o.log,
+			ch.houseId,ch.houseLocation,ch.houseTypeId,hs.name name_hst,
+			c.companyId,c.storeName,o.createUserId,au.nickname createNickname,
+			ct.typeId,ct.name name_t,o.orderCode
+			 from `order` o
+			 left join customer_house ch on ch.houseId=o.houseId
+			 left join house_style hs on hs.styleId=ch.houseTypeId
+			 left join company c on c.companyId=o.toId and o.type=1
+			 left join admin_user au on au.adminUserId=o.createUserId
+			 left join company_type ct on ct.typeId=o.typeId
+			 where 1=1 
+				<if test="order.orderId!=null">
+					and o.orderId=#{order.orderId}
+				</if>
+				<if test="order.orderCode!=null">
+					and o.orderCode=#{order.orderCode}
+				</if>
+	</select>
+	
+	<select id="list" resultMap="order">
+		select o.orderId,o.type,o.price,unix_timestamp(o.createDate)*1000 createDate,unix_timestamp(o.acceptDate)*1000 acceptDate,o.acceptStatus,
+			o.isSuccess,unix_timestamp(o.successDate)*1000 successDate,o.info,o.log,
+			ch.houseId,ch.houseLocation,ch.houseTypeId,hs.name name_hst,
+			c.companyId,c.storeName,o.createUserId,au.nickname createNickname,
+			ct.typeId,ct.name name_t,o.orderCode
+			 from `order` o
+			 left join customer_house ch on ch.houseId=o.houseId
+			 left join house_style hs on hs.styleId=ch.houseTypeId
+			 left join company c on c.companyId=o.toId and o.type=1
+			 left join admin_user au on au.adminUserId=o.createUserId
+			 left join company_type ct on ct.typeId=o.typeId
+			 
+			 where 1=1 
+			  <if test="page.param.orderCode!=null">
+				and o.orderCode=#{page.param.orderCode}
+			</if>
+			  <if test="page.param.createUserId!=null">
+				and o.createUserId=#{page.param.createUserId}
+			</if>
+			  <if test="page.param.createDate_start!=null">
+				and to_days(o.createDate) &gt;= to_days(#{page.param.createDate_start})
+			</if>
+			 <if test="page.param.createDate_end!=null">
+				and to_days(o.createDate) &lt;= to_days(#{page.param.createDate_end})
+			</if>
+			 <if test="page.param.isSuccess!=null">
+				and o.isSuccess =#{page.param.isSuccess}
+			 </if>
+			 <if test="page.param.acceptStatus!=null">
+				and o.acceptStatus =#{page.param.acceptStatus}
+			 </if>
+			 <if test="houseStyleName!=null">
+				and hs.name like '%${houseStyleName}%'
+			 </if>
+			 <if test="companyTypeName!=null">
+				and ct.name like '%${companyTypeName}%'
+			 </if>
+			 
+			 
+			 <if test="page.param.orderId!=null">
+				and o.orderId=#{page.param.orderId}
+			 </if>
+			 
+			 <if test="keeperId!=null">
+				and c.keeperId=#{keeperId}
+			 </if>
+			 
+			 order by o.orderId ${page.direction}
+			limit ${(page.pageIndex-1)*page.pageSize},${page.pageSize}
+	</select>
+	
+	<select id="count" resultType="int">
+		select count(*)
+			 from `order` o
+			 left join customer_house ch on ch.houseId=o.houseId
+			 left join company c on c.companyId=o.toId and o.type=1
+			 left join admin_user au on au.adminUserId=o.createUserId
+			 left join company_type ct on ct.typeId=o.typeId
+			 where 1=1 
+			  <if test="order.orderCode!=null">
+				and o.orderCode=#{order.orderCode}
+				</if>
+			  <if test="order.createUserId!=null">
+				and o.createUserId=#{order.createUserId}
+				</if>
+			  <if test="order.createDate_start!=null">
+				and to_days(o.createDate) &gt;= to_days(#{order.createDate_start})
+			</if>
+			 <if test="order.createDate_end!=null">
+				and to_days(o.createDate) &lt;= to_days(#{order.createDate_end})
+			</if>
+			 <if test="order.isSuccess!=null">
+				and o.isSuccess =#{order.isSuccess}
+			 </if>
+			 <if test="order.acceptStatus!=null">
+				and o.acceptStatus =#{order.acceptStatus}
+			 </if>
+			 <if test="houseStyleName!=null">
+				and hs.name like '%${houseStyleName}%'
+			 </if>
+			 <if test="companyTypeName!=null">
+				and ct.name like '%${companyTypeName}%'
+			 </if>
+			 
+			 <if test="order.orderId!=null">
+				and o.orderId=#{order.orderId}
+			 </if>
+			 
+			 <if test="keeperId!=null">
+				and c.keeperId=#{keeperId}
+			 </if>
+	</select>
+	
+	<select id="totalPrice" resultType="int">
+		select ifnull(sum(o.price),0) 
+			 from `order` o
+			 left join customer_house ch on ch.houseId=o.houseId
+			 left join company c on c.companyId=o.toId and o.type=1
+			 left join admin_user au on au.adminUserId=o.createUserId
+			 left join company_type ct on ct.typeId=o.typeId
+			 where 1=1 
+			 <if test="order.orderCode!=null">
+				and o.orderCode=#{order.orderCode}
+				</if>
+			  <if test="order.createUserId!=null">
+				and o.createUserId=#{order.createUserId}
+				</if>
+			  <if test="order.createDate_start!=null">
+				and to_days(o.createDate) &gt;= to_days(#{order.createDate_start})
+			</if>
+			 <if test="order.createDate_end!=null">
+				and to_days(o.createDate) &lt;= to_days(#{order.createDate_end})
+			</if>
+			 <if test="order.isSuccess!=null">
+				and o.isSuccess =#{order.isSuccess}
+			 </if>
+			 <if test="order.acceptStatus!=null">
+				and o.acceptStatus =#{order.acceptStatus}
+			 </if>
+			 <if test="houseStyleName!=null">
+				and hs.name like '%${houseStyleName}%'
+			 </if>
+			 <if test="companyTypeName!=null">
+				and ct.name like '%${companyTypeName}%'
+			 </if>
+			 
+			 <if test="order.orderId!=null">
+				and o.orderId=#{order.orderId}
+			 </if>
+			 
+			 <if test="keeperId!=null">
+				and c.keeperId=#{keeperId}
+			 </if>
+	</select>
+
+	<select id="getCompanyService" resultMap="companyService">
+		select c.companyId,c.storeName,c.account storeFee,
+		(select count(*) from `order` o where o.toId=c.companyId and o.typeId=#{typeId} and o.type=1 and
+		o.createDate &gt;=(select DATE_ADD(curdate(),interval -day(curdate())+1 day)) ) monthCount,cz.id tempId,
+		(
+		ifnull(
+		(select cts.price from company_to_style cts where cts.`companyId`=c.companyId and cts.`typeId`=#{typeId}
+		and cts.styleId=#{page.param.houseTypeId}),
+		(select cts.price from company_to_style cts where cts.`companyId` is null and cts.`typeId`=#{typeId}
+		and cts.styleId=#{page.param.houseTypeId})
+			) 
+		) price,
+		ct.typeId,ct.name name_t,o.orderId
+		from `company` c 
+		left join `company_zone` cz on c.companyId=cz.companyId
+			<if test="page.param.zoneId!=null">
+				and cz.zoneId=#{page.param.zoneId}
+			</if>
+		left join company_to_type ctt on ctt.companyId=c.companyId
+		left join company_type ct on ct.typeId=ctt.typeId
+		left join `order` o on o.toId=c.companyId and o.type=1 and o.typeId=#{typeId} and houseId=#{page.param.houseId}
+		where c.companyId in (select su.companyId from
+		(
+			select c.companyId,
+			(select count(*) from `order` o where o.toId=c.companyId and o.typeId=#{typeId} and o.type=1 and
+			o.createDate &gt;=(select DATE_ADD(curdate(),interval -day(curdate())+1 day)) ) monthCount
+			from `company` c
+			left join `company_zone` cz on c.companyId=cz.companyId
+			left join company_to_type ctt on ctt.companyId=c.companyId
+			where 1=1 and c.accept=1
+				and ctt.typeId=#{typeId}
+			<if test="zoneId!=null">
+				and cz.zoneId=#{zoneId}
+			</if>
+			<if test="storeName!=null">
+				and c.storeName like '%${storeName}%'
+			</if>
+			order by monthCount desc
+			limit ${(page.pageIndex-1)*page.pageSize},${page.pageSize}
+		) su
+		)
+		
+	</select>
+
+	<select id="getCompanyServiceCount" resultType="int">
+		select count(c.companyId)
+			
+			from `company` c
+			left join `company_zone` cz on c.companyId=cz.companyId
+			left join company_to_type ctt on ctt.companyId=c.companyId
+			where 1=1 and c.accept=1
+				and ctt.typeId=#{typeId}
+			<if test="zoneId!=null">
+				and cz.zoneId=#{zoneId}
+			</if>
+			<if test="storeName!=null">
+				and c.storeName like '%${storeName}%'
+			</if>
+	</select>
+
+
+</mapper> 
+
+ 

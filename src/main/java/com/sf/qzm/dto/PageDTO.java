@@ -1,6 +1,7 @@
 package com.sf.qzm.dto;
 
 import java.io.Serializable;
+import java.util.Map;
 
 /**
  * 分页业务对象 默认 第一页，每页十条
@@ -14,11 +15,11 @@ public class PageDTO<T> implements Serializable {
 	/**
 	 * 页容量
 	 */
-	private Integer pageSize = 10;
+	private Integer pageSize ;
 	/**
 	 * 页码
 	 */
-	private Integer pageIndex = 1;// 页码
+	private Integer pageIndex ;// 页码
 	/**
 	 * 总页数
 	 */
@@ -34,6 +35,7 @@ public class PageDTO<T> implements Serializable {
 	
 	private String direction;
 	
+	private Map<String,Object> statistics;//totalNum, totalPrice
 	
 	public String getDirection() {
 		return direction;
@@ -96,5 +98,14 @@ public class PageDTO<T> implements Serializable {
 		this.orderBy = orderBy;
 	}
 
+	public Map<String, Object> getStatistics() {
+		return statistics;
+	}
+
+	public void setStatistics(Map<String, Object> statistics) {
+		this.statistics = statistics;
+	}
+
+	
 	
 }

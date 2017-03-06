@@ -38,6 +38,8 @@ public class Company {
 	 */
 	private Integer storeType;//0-普通店铺，1-旗舰店
 	
+	private Integer account;//账户余额
+	
 	private Integer keeperId;//负责人id
 	
 	private String keeperName;
@@ -152,6 +154,19 @@ public class Company {
 	}
 	public void setCompanyTypeIds(Integer[] companyTypeIds) {
 		this.companyTypeIds = companyTypeIds;
+	}
+	public Integer getAccount() {
+		return account;
+	}
+	public void setAccount(Integer account) {
+		this.account = account;
+	}
+	public Company(Integer companyId) {
+		super();
+		this.companyId = companyId;
+	}
+	public Company() {
+		super();
 	}
 	
 }

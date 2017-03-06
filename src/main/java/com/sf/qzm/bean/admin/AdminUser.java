@@ -18,6 +18,7 @@ public class AdminUser implements SfBean {
 	 * 主键
 	 */
 	private Integer adminUserId;
+	private String avatar;
 	/**
 	 * 登录名－30
 	 */
@@ -153,6 +154,16 @@ public class AdminUser implements SfBean {
 	public void setLoginname(String loginname) {
 		this.loginname = loginname;
 	}
+	
+	public String getAvatar() {
+		return avatar;
+	}
+
+
+	public void setAvatar(String avatar) {
+		this.avatar = avatar;
+	}
+
 
 	public String getPassword() {
 		return password;

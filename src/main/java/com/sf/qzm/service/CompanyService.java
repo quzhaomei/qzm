@@ -9,6 +9,6 @@ public interface CompanyService {
 	void saveOrUpdate(Company company);
 	CompanyDTO get(Integer companyId);
 	 List<CompanyDTO> all();
-	 
+	 List<CompanyDTO> list(Integer keeperId);
 	 void clear();
 }

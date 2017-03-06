@@ -6,6 +6,7 @@
 	<id property="companyId" column="companyId"/>
 	<result property="companyName" column="companyName" />
 	<result property="logo" column="logo" />
+	<result property="account" column="account" />
 	<result property="storeName" column="storeName" />
 	<result property="storePhone" column="storePhone" />
 	<result property="storeAddress" column="storeAddress" />
@@ -82,6 +83,9 @@
 			<if test="company.storeAddress!=null">
 				,storeAddress=#{company.storeAddress}
 			</if>
+			<if test="company.account!=null">
+				,account=#{company.account}
+			</if>
 			<if test="company.storePhone!=null">
 				,storePhone=#{company.storePhone}
 			</if>
@@ -99,7 +103,7 @@
 	</update>
 	
 	<select id="get" resultMap="company">
-		select c.companyId,c.companyName,c.logo,c.storeName,
+		select c.companyId,c.companyName,c.logo,c.storeName,c.account,
 		c.storePhone,c.storeAddress,c.storeType,c.keeperName,c.keeperPhone,c.accept
 		,c.status,unix_timestamp(c.createDate)*1000 createDate,c.createUserId,c.keeperId,
 		au.nickname createNickname,aus.nickname keeperNickname,
@@ -115,9 +119,12 @@
 		    <if test="company.companyId!=null">
 				and c.companyId=#{company.companyId}
 			</if>
+			<if test="company.keeperId!=null">
+				and c.keeperId=#{company.keeperId}
+			</if>
 	</select>
 	<select id="list" resultMap="company">
-			select c.companyId,c.companyName,c.logo,c.storeName,
+			select c.companyId,c.companyName,c.logo,c.storeName,c.account,
 		c.storePhone,c.storeAddress,c.storeType,c.keeperName,c.keeperPhone,c.accept
 		,c.status,unix_timestamp(c.createDate)*1000 createDate,c.createUserId,c.keeperId,
 		au.nickname createNickname,aus.nickname keeperNickname,
@@ -132,6 +139,9 @@
 		    where 1=1
 		    <if test="company.companyId!=null">
 				and c.companyId=#{company.companyId}
+			</if>
+		    <if test="company.keeperId!=null">
+				and c.keeperId=#{company.keeperId}
 			</if>
 			order by c.companyId
 	</select>

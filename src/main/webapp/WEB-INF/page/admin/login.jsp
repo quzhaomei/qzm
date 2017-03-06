@@ -11,7 +11,7 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 <base href="<%=basePath%>">
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<link rel="stylesheet" href="css/style.css"></link>
+	<link rel="stylesheet" href="/static/css/style.css"></link>
 	<script src="js/jquery.min.js"></script>
 	<title>后台管理系统</title>
 	
@@ -19,7 +19,7 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 <body id="landing"> 
 	<div class="loginform">
 		<div class="logo">
-			<img src="images/logo-login.png">
+			<img src="/static/images/logo-login.png">
 		</div>
 		
 		<form action="adminLogin/login.htmls" id="loginForm" method="post">

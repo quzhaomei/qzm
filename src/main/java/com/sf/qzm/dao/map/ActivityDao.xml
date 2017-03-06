@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sf.qzm.dao.ActivityDao">
+<cache eviction="LRU" flushInterval="60000" size="1024" readOnly="true"/>
+<resultMap type="com.sf.qzm.dto.biz.ActivityDTO" id="activity">
+	<id property="activityId" column="activityId"/>
+	<result property="name" column="name" />
+	<result property="info" column="info" />
+	<result property="status" column="status" />
+	<result property="startDate" column="startDate" />
+	<result property="endDate" column="endDate" />
+	<result property="createDate" column="createDate" />
+	<result property="hasName" column="hasName" />
+	<result property="hasPhone" column="hasPhone" />
+	
+	<association property="createUser" column="createUserId" javaType="com.sf.qzm.dto.admin.AdminUserDTO">
+		<id property="adminUserId" column="createUserId"/>
+		<result property="nickname" column="createNickname"/>
+	</association>
+	<collection property="images" column="imageId" ofType="com.sf.qzm.bean.biz.ActivityImage" >
+		<id property="imageId" column="imageId" />
+		<result property="path" column="path" />
+		<result property="sequence" column="sequence" />
+	</collection>
+</resultMap>
+
+	<insert id="save" useGeneratedKeys="true" keyProperty="activity.activityId">
+		insert into activity(activityId,name,info,
+		status,startDate,endDate,createDate,createUserId)
+		values(#{activity.activityId},#{activity.name},#{activity.info},
+		#{activity.status},#{activity.startDate},#{activity.endDate},
+		#{activity.createDate},#{activity.createUserId})
+	</insert>
+	
+	<update id="emptyImage">
+		delete from activityImage where activityId=#{activityId}
+	</update>
+	
+	<insert id="saveImage">
+	
+		  insert into activityImage (activityId,path,sequence)   
+	    values  
+	    <foreach collection="images"  item="image" index="index" separator="," >  
+	        (#{activityId},#{image.path},#{image.sequence})  
+	    </foreach>  
+	</insert>
+	
+	<update id="update">
+		update activity set activityId=#{activity.activityId}
+		<if test="activity.endDate!=null">
+			,endDate=#{activity.endDate}
+		</if>
+		<if test="activity.startDate!=null">
+			,startDate=#{activity.startDate}
+		</if>
+		<if test="activity.status!=null">
+			,status=#{activity.status}
+		</if>
+		<if test="activity.name!=null">
+			,name=#{activity.name}
+		</if>
+		<if test="activity.hasName!=null">
+			,hasName=#{activity.hasName}
+		</if>
+		<if test="activity.hasPhone!=null">
+			,hasPhone=#{activity.hasPhone}
+		</if>
+		<if test="activity.info!=null">
+			,info=#{activity.info}
+		</if>
+		where activityId=#{activity.activityId}
+	</update>
+	
+	<select id="get" resultMap="activity">
+		select c.activityId,c.name,c.info,c.hasName,c.hasPhone,
+		c.status,unix_timestamp(c.startDate)*1000 startDate,unix_timestamp(c.endDate)*1000 endDate
+		,unix_timestamp(c.createDate)*1000 createDate,c.createUserId,au.nickname
+		,ai.imageId,ai.path,ai.sequence
+		 from activity c
+		 left join admin_user au on au.adminUserId=c.createUserId
+		 left join activityImage ai on ai.activityId=c.activityId
+		    where 1=1
+		    <if test="activity.activityId!=null">
+				and c.activityId=#{activity.activityId}
+			</if>
+	</select>
+	<select id="list" resultMap="activity">
+		select c.activityId,c.name,c.info,c.hasName,c.hasPhone,
+		c.status,unix_timestamp(c.startDate)*1000 startDate,unix_timestamp(c.endDate)*1000 endDate,
+		unix_timestamp(c.createDate)*1000 createDate,c.createUserId,au.nickname
+		,ai.imageId,ai.path,ai.sequence
+		 from activity c
+		 left join admin_user au on au.adminUserId=c.createUserId
+		 left join activityImage ai on ai.activityId=c.activityId
+		    where 1=1
+		    <if test="activity.activityId!=null">
+				and c.activityId=#{activity.activityId}
+			</if>
+			order by c.activityId asc,ai.sequence asc
+	</select>
+	
+</mapper>  

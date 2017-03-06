@@ -77,4 +77,12 @@ public class CompanyServiceImpl implements CompanyService {
 		companyDao.clear();
 	}
 
+	@Override
+	public List<CompanyDTO> list(Integer keeperId) {
+		if(keeperId==null){return null;}
+		Company param=new Company();
+		param.setKeeperId(keeperId);
+		return companyDao.list(param);
+	}
+
 }

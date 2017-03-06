@@ -75,8 +75,6 @@ public class Customer {
 	private String nextcallInfo;//回访备注
 	
 	
-	
-	
 	private List<Integer> houseId;
 	
 	/**
@@ -95,9 +93,12 @@ public class Customer {
 	private Date nextcallInfo_start;
 	@DateTimeFormat(pattern="yyyy-MM-dd")
 	private Date nextcallInfo_end;
+	
+	
 	private String key;
 	private String channel;//渠道名称
 	private String createUser;//创建者
+	private String servicer;//业务员
 	private String houseLocation;
 	
 	
@@ -284,5 +285,12 @@ public class Customer {
 	public void setNextcallInfo_end(Date nextcallInfo_end) {
 		this.nextcallInfo_end = nextcallInfo_end;
 	}
+	public String getServicer() {
+		return servicer;
+	}
+	public void setServicer(String servicer) {
+		this.servicer = servicer;
+	}
+	
 	
 }

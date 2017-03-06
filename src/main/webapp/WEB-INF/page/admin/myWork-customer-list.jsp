@@ -12,10 +12,10 @@ function parseHouse(houses){
 		var arr=[];
 		for(var index=0;index<houses.length;index++){
 			var temp=houses[index];
-			if(temp.status==1){
-				arr.push(temp.houseLocation+'<span><i class="icon-check_circle icon-green"></i></span>');
-			}else{
+			if(temp.status==0){
 				arr.push(temp.houseLocation+'<span><i class="icon-schedule icon-red"></i></span>');
+			}else{
+				arr.push(temp.houseLocation+'<span><i class="icon-check_circle icon-green"></i></span>');
 			}
 		}
 		return arr.join("<br/>")
@@ -50,10 +50,13 @@ var props={
 					toEdit(data);
 					}}],
 			specialOperator:[{type:1,icon:"icon-mail_outline",title:"发送回访确认短信",powerCode:"myWork-customer-msg",
+				filter:{column:"status",values:[1,2,5]},
 				callback:function(data){
 					customerMsg(data);
 				}}
-			,{type:1,icon:"icon-phone",title:"呼叫",powerCode:"myWork-customer-call", callback:function(data){
+			,{type:1,icon:"icon-phone",title:"呼叫",powerCode:"myWork-customer-call", 
+				filter:{column:"status",values:[1,2,5]},
+			callback:function(data){
 				callCustomer(data);
 			}}
 			,{type:1,icon:"icon-loop changestatus",title:"状态切换",powerCode:"myWork-customer-status",
@@ -187,10 +190,10 @@ var reactData=$("#maincontents").render("Table_data",props,function(react_obj,do
 								<div class="formsection">
 									
 									<div class="form-row withicon">
-										<select name="template" class="sf-select select dropdown-container menu-down status">
+										<select name="template" class="sf-select select dropdown-container menu-down status multiline">
 											<option value="">请选择短信内容</option>
 											<c:forEach items="${msgTemplate }" var="temp">
-												<option value="${temp.template}">${temp.value }</option>
+												<option value="${temp.templateId}">${temp.info }</option>
 											</c:forEach>
 										</select>
 									</div>
@@ -219,7 +222,10 @@ var callphone = new UCObj(window, document);
 function callCustomer(data){
 	var param={};
 	param.customerId=data.customerId;
+	var _this=this;
+	$(_this).attr("disabled","disabled");
 	$.post("myWork/customer-call.htmls",param,function(json){
+		$(_this).removeAttr("disabled");
 		if(json.status==1){
 			var phone=json.data;
 			//电话外呼
@@ -253,6 +259,16 @@ function customerMsg(data){
 }
 
 $(function(){
+	$.datetimepicker.setLocale('ch');
+	$('.datetimepicker').datetimepicker({
+		lang:'ch',
+		timepicker:false,
+		format:'Y-m-d',
+		formatDate:'Y-m-d',
+		yearStart: '2016',
+		minDate:'-2016/08/02', // yesterday is minimum date
+	});
+	
 	
 	$("#changeStatusSave").on("click",function(){
 		var customer=$("#changeStatus").data("customer");
@@ -271,11 +287,15 @@ $(function(){
 			param.nextcallTime=nextcallTime;
 		}
 		param.nextcallInfo=info;
+		var _this=this;
+		$(_this).attr("disabled","disabled");
 		$.post("myWork/customer-status.htmls",param,function(json){
+			$(_this).removeAttr("disabled");
 			alert(json.message);
 			if(json.status==1){
 				$("#changeStatus").modal("hide");
-				reactData.reload("last");//重新加载数据
+				var pageIndex=reactData.state.pageIndex;
+				reactData.reload(pageIndex);//重新加载数据,并跳转当页
 			}
 		},"json")
 	});
@@ -296,14 +316,18 @@ $(function(){
 			alert("请选择短信内容");return;
 		}
 		var data=$("#sendMsgModal").data("data");
+		if(!data){alert("请选择客户");return}
 		if(confirm("确认向客户 " +data.name+" 发送短信吗？")){
 			var param={};
 			param.customerId=data.customerId;
-			param.template=template;
+			param.templateId=template;
+			var _this=this;
+			$(_this).attr("disabled","disabled");
 			$.post("myWork/customer-msg.htmls",param,function(json){
+				$(_this).removeAttr("disabled");
 					alert(json.message);
 					if(json.status==1){
-						$("#sendMsgModal").modal("close");
+						$("#sendMsgModal").modal("hide");
 					}
 			},"json");
 		}	
@@ -351,13 +375,11 @@ $(function(){
 	//保存修改
 	$("#editSave").on("click",function(){
 		var name=$("#editModal #name_edit").val();
-//		var code=$("#editModal #customerCode_edit").val();
 		var info=$("#editModal #info_edit").val();
 		var ageId=$("#editModal #ageId_edit").val();
 		var carCode=$("#editModal #carCode_edit").val();
 		var gender=$("#editModal #gender_edit").val();
 		var integration=$("#editModal #integration_edit").val();
-		var phone=$("#editModal #phone_edit").val();
 		
 		if(!name){
 			alert("请输入用户名称");
@@ -368,9 +390,7 @@ $(function(){
 		param.customerId=editTemp.customerId;
 		
 		param.name=name;
-//		param.code=code;
 		param.info=info;
-		param.phone=phone;
 		if(ageId!="null"){
 		param.ageId=ageId;
 		}
@@ -426,66 +446,70 @@ $(function(){
 			var giftAddress=$(this).find("[name='giftAddress']").val();
 			house.giftAddress=giftAddress;
 			
-			if(!zoneId){
-				alert("请选择区域");error=true;
-				return;
-			}
-			if(!houseInfo){
-				alert("请填写楼盘信息");error=true;
-				return;
-			}
-			if(!houseLocation){
-				alert("请填写房屋地址");error=true;
-				return;
-			}
-			if(houseTypeId==""){
-				alert("请选择房型");error=true;
-				return;
-			}
-			if(isNew==""){
-				alert("请选择房屋类别");error=true;
-				return;
-			}
-			if(area==""){
-				alert("请填写装修面积");error=true;
-				return;
-			}
-			if(!area.match(/\d+/)){
+//			if(!zoneId){
+//				alert("请选择区域");error=true;
+//				return;
+//			}
+//			if(!houseInfo){
+//				alert("请填写楼盘信息");error=true;
+//				return;
+//			}
+//			if(!houseLocation){
+//				alert("请填写房屋地址");error=true;
+//				return;
+//			}
+//			if(houseTypeId==""){
+//				alert("请选择房型");error=true;
+//				return;
+//			}
+//			if(isNew==""){
+//				alert("请选择房屋类别");error=true;
+//				return;
+//			}
+//			if(area==""){
+//				alert("请填写装修面积");error=true;
+//				return;
+//			}
+			if(area&&!area.match(/^\d+$/)){
 				alert("装修面积为数字");error=true;
 				return;
 			}
-			if(designType==""){
-				alert("请选择专修类别");error=true;
-				return;
-			}
-			if(budgetId==""){
-				alert("请选择装修预算");error=true;
-				return;
-			}
-			if(hasSoft==""){
-				alert("请选择软装需求");error=true;
-				return;
-			}
-			if(gift==""){
-				alert("请选择是否派送了礼物");error=true;
-				return;
-			}
+//			if(designType==""){
+//				alert("请选择专修类别");error=true;
+//				return;
+//			}
+//			if(budgetId==""){
+//				alert("请选择装修预算");error=true;
+//				return;
+//			}
+//			if(hasSoft==""){
+//				alert("请选择软装需求");error=true;
+//				return;
+//			}
+//			if(gift==""){
+//				alert("请选择是否派送了礼物");error=true;
+//				return;
+//			}
 			
 			houses.push(house);
 		});
 		param.houses=houses;
 		if(error){return;}
+		var _this=this;
+		$(_this).attr("disabled","disabled");
 		$.ajax({type:"post",
 				url:"myWork/customer-update.htmls",
 				dataType:"json",
 				contentType:"application/json",               
 	            data:JSON.stringify(param), 
 				success:function(json){
+					$(_this).removeAttr("disabled");
 					if(json.status==1){//成功，刷新数据;
 						alert(json.message);
-						$("#editModal").modal("hide");
-						var pageIndex=reactData.state.pageIndex;
-						reactData.reload(pageIndex);//重新加载数据,并跳转当页
+						//	$("#editModal").modal("hide");
+							freshEdit(json.data);
+							$("#editModal").data("data",json.data);
+							
 					}else{
 						alert(json.message);
 					}
@@ -507,24 +531,123 @@ $(function(){
 	//删除房产
 	$(".editMyCustomer").on("click",".data-delete",function(){
 		if(confirm("确定删除吗？")){
-			$(this).parent(".data-form").remove();
+			$(this).parents(".data-form").remove();
 		}
 	});
 	
 	//发布房产
 	$("#editModal").on("click",".publish_house",function(){
+		var param={};
+		param.customerId=editTemp.customerId;
+		
+		var houses=[];
+		//查看是否有新增的房产
+		var $house= $(this).parents(".data-form");
+			var house={};
+			var houseId=$house.find("[name='houseId']").val();
+				house.houseId=houseId;
+				house.status=1;//已发布
+			var zoneId=$house.find("[name='zoneId']").val();
+			house.zoneId=zoneId;
+			
+			var houseInfo=$house.find("[name='houseInfo']").val();
+			house.houseInfo=houseInfo;
+			
+			var houseLocation=$house.find("[name='houseLocation']").val();
+			house.houseLocation=houseLocation;
+			
+			var houseTypeId=$house.find("[name='houseTypeId']").val();
+			house.houseTypeId=houseTypeId;
+			
+			var isNew=$house.find("[name='isNew']").val();
+			house.isNew=isNew;
+			
+			var area=$house.find("[name='area']").val();
+			house.area=area;
+			
+			var designType=$house.find("[name='designType']").val();
+			house.designType=designType;
+			
+			var budgetId=$house.find("[name='budgetId']").val();
+			house.budgetId=budgetId;
+			
+			var hasSoft=$house.find("[name='hasSoft']").val();
+			house.hasSoft=hasSoft;
+			
+			var comment=$house.find("[name='comment']").val();
+			house.comment=comment;
+			
+			var gift=$house.find("[name='gift']").val();
+			house.gift=gift;
+			var giftAddress=$house.find("[name='giftAddress']").val();
+			house.giftAddress=giftAddress;
+			if(!zoneId){
+				alert("请选择区域");error=true;
+				return;
+			}
+			if(!houseInfo){
+				alert("请填写楼盘信息");error=true;
+				return;
+			}
+			if(isNew==""){
+				alert("请选择房屋类别");error=true;
+				return;
+			}
+			if(area==""){
+				alert("请填写装修面积");error=true;
+				return;
+			}
+			if(area&&!area.match(/^\d+$/)){
+				alert("装修面积为数字");error=true;
+				return;
+			}
+			if(comment==""){
+				alert("请选择需求备注");error=true;
+				return;
+			}
+			
+			houses.push(house);
+		param.houses=houses;
+		var _this=this;
+		$(_this).attr("disabled","disabled");
+		$.ajax({type:"post",
+				url:"myWork/customer-update.htmls",
+				dataType:"json",
+				contentType:"application/json",               
+	            data:JSON.stringify(param), 
+				success:function(json){
+					$(_this).removeAttr("disabled");
+					if(json.status==1){//成功，刷新数据;
+						alert("发布成功！");
+							freshEdit(json.data);
+							$("#editModal").data("data",json.data);
+					}else{
+						
+						alert(json.message);
+					}
+
+				}
+			});
+	});
+	
+	
+	
+	//删除未发布的房产
+	$("#editModal").on("click",".data-delete-rel",function(){
 		var _this=this;
 		var house=$(this).parents(".data-form").data("house");
-		if(house&&confirm("确定发布吗？")){
+		if(house&&confirm("确定删除吗？")){
 			var param={};
 			param.houseId=house.houseId;
-			param.operator="publishHouse";
-			
+			param.operator="deleteHouse";
+			var _this=this;
+			$(_this).attr("disabled","disabled");
 			$.post("myWork/myWork-customer-index.htmls",param,function(json){
+				$(_this).removeAttr("disabled");
 				alert(json.message)
 				if(json.status==1){
-					$(_this).parent().empty().append('<button class="btn btn-sm btn-green" readonly>'+
-							'已发布</button>')
+			//		$(_this).parent().empty().append('<button class="btn btn-sm btn-green" readonly>'+'已发布</button>')
+					freshEdit(json.data);
 				}
 			},"json")
 		}
@@ -532,11 +655,17 @@ $(function(){
 	
 });
 
+var newIndex=1;
 function addHouse(){
 	$("#editModal .form-footer").before($("#addCustomerHouseTemplate").html());
 	$("#editModal select").each(function(){
 		$(this).smartSelect();
 	});
+	newIndex++;
+	$("#editModal .form-footer").prev("fieldset").attr("id","newIndex"+newIndex);
+    var t = $("#newIndex"+newIndex).offset().top;
+
+    $(".panel-content").scrollTop(t)
 }	
 
 function editHouse(data){
@@ -548,11 +677,16 @@ function editHouse(data){
 	$dataForm.find("#zoneId_2").attr("default_",data.zoneParentId);
 	$dataForm.find("#zoneId").attr("default_",data.zoneId);
 	var $statusDiv=$dataForm.find(".house_status_div");
-	if(data.status==1){
-		$statusDiv.append('<button class="btn btn-sm btn-green" readonly>已发布</button>');
-	}else{
+	
+	if(data.status==0){
 		$statusDiv.append('<button class="btn btn-sm publish_house">发布</button>');
+		$statusDiv.append('<button class="btn btn-sm data-delete-rel">删除</button>');
+	}else{
+		//是否有二手房不能更改
+		$statusDiv.append('<button class="btn btn-sm btn-green" readonly>已发布</button>');
+		$dataForm.find("select[name='hasSoft']").attr("disabled","disabled");
 	}
+	
 	$dataForm.initForm(data);
 	$("#editModal select").each(function(){
 		$(this).smartSelect();
@@ -567,7 +701,10 @@ function toEdit(data){
 	if(data.houses&&data.houses.length>0){
 		var customerId=data.customerId;
 		var param={};param.customerId=customerId;param.operator="getHouse";
+		var _this=this;
+		$(_this).attr("disabled","disabled");
 		$.post("myWork/myWork-customer-index.htmls",param,function(json){
+			$(_this).removeAttr("disabled");
 			if(json){
 				data.houses=json;
 				editTemp=data;
@@ -585,6 +722,33 @@ function toEdit(data){
 	}
 }
 
+function freshEdit(data){
+	if(!data){data=$("#editModal").data("data");}
+	//查找房产信息
+	if(data.houses&&data.houses.length>0){
+		var customerId=data.customerId;
+		var param={};param.customerId=customerId;param.operator="getHouse";
+		$.post("myWork/myWork-customer-index.htmls",param,function(json){
+			if(json){
+				data.houses=json;
+				editTemp=data;
+				initEditForm(editTemp);
+				
+			var pageIndex=reactData.state.pageIndex;
+			reactData.reload(pageIndex);//重新加载数据,并跳转当页
+			
+			}else{
+				alert("数据异常，请刷新页面！");
+			}
+		},"json");
+	}else{//无房产信息
+		editTemp=data;
+		initEditForm(editTemp);
+	}
+	
+}
+
+
 
 function editReset(){
 	var data=editTemp;
@@ -592,8 +756,9 @@ function editReset(){
 }
 
 function initEditForm(data){
+	$("#editModal .waitForCallDiv").remove();
 	$("#editModal .dynmic").remove();
-	
+	$("#editModal .customer_name").text(data.name);
 	$("#editModal #editStatus .label").hide();
 	$("#editModal #editStatus .label[value='"+data.status+"']").show();
 	
@@ -668,7 +833,7 @@ function initEditForm(data){
 		<div class="modal-full sf-modal editMyCustomer"  id="editModal" style="display: none;">
 			<div class="panel">
 				<div class="panel-title">
-					<span>修改客户
+					<span>修改<strong class="customer_name">客户</strong>的信息
 						<div class="label-right" id="editStatus">
 						<div class="label label-line label-gray" value="1">
 							待分配
@@ -731,7 +896,7 @@ function initEditForm(data){
 									</div>
 									<div class="formitem withicon">
 										<select id="gender_edit" class="sf-select dropdown-container menu-down select">
-											<option value="null">未选择</option>
+											<option value="-1">未选择</option>
 											<option value="1">男</option>
 											<option value="0">女</option>
 										</select>
@@ -743,7 +908,7 @@ function initEditForm(data){
 
 									<div class="formitem withicon">
 										<select id="ageId_edit" class="sf-select dropdown-container menu-down select">
-											<option value="null">未选择</option>
+											<option value="-1">未选择</option>
 											<c:forEach items="${ages }" var="age">
 												<option value="${age.ageId }">${age.name }</option>
 											</c:forEach>
@@ -831,7 +996,7 @@ function initEditForm(data){
 														</c:forEach>
 													</select>
 												<div class="placeholder">
-													城市
+													城市＊
 												</div>
 												</div>
 
@@ -842,7 +1007,7 @@ function initEditForm(data){
 														<option value="">请选择</option>
 													</select>
 													<div class="placeholder">
-														区域
+														区域＊
 													</div>
 												</div>
 
@@ -851,7 +1016,7 @@ function initEditForm(data){
 														<option value="">请选择</option>
 														</select>
 													<div class="placeholder">
-														区域细分
+														区域细分＊
 													</div>
 												</div>
 
@@ -859,7 +1024,7 @@ function initEditForm(data){
 													<input type="text" name="houseInfo" placeholder="请输入楼盘信息">
 													
 													<div class="placeholder">
-														楼盘信息
+														楼盘信息＊
 													</div>
 												</div>
 
@@ -873,7 +1038,7 @@ function initEditForm(data){
 
 												<div class="formitem">
 														<select  name="houseTypeId" class="dropdown-container menu-down select">
-															<option value="">请选择</option>
+															<option value="-1">请选择</option>
 															<c:forEach items="${styles }" var="style">
 																<option value="${style.styleId }">${style.name }</option>
 															</c:forEach>
@@ -890,7 +1055,7 @@ function initEditForm(data){
 															<option value="0">二手房</option>
 														</select>
 													<div class="placeholder">
-														房屋类别
+														房屋类别＊
 													</div>
 												</div>
 
@@ -899,14 +1064,14 @@ function initEditForm(data){
 													<input type="text" name="area" placeholder="请输入装修面积">
 													<span>m²</span>
 													<div class="placeholder">
-														装修面积
+														装修面积＊
 													</div>
 												</div>
 
 												<div class="formitem">
 												
 												<select name="designType" class="dropdown-container menu-down select">
-														<option value="">请选择</option>
+														<option value="-1">请选择</option>
 														<option value="0">半包</option>
 														<option value="1">全包</option>
 													</select>
@@ -919,7 +1084,7 @@ function initEditForm(data){
 
 												<div class="formitem">
 													<select name="budgetId" class="dropdown-container menu-down select">
-														<option value="">请选择</option>
+														<option value="-1">请选择</option>
 														<c:forEach items="${budgets }" var="budget">
 														<option value="${budget.budgetId }">${budget.name }</option>
 														</c:forEach>
@@ -932,7 +1097,7 @@ function initEditForm(data){
 
 												<div class="formitem">
 												<select name="hasSoft" class="dropdown-container menu-down select">
-														<option value="">请选择</option>
+														<option value="-1">请选择</option>
 														<option value="1">是</option>
 														<option value="0">否</option>
 													</select>
@@ -949,14 +1114,14 @@ function initEditForm(data){
 											<div class="form-row">
 												<textarea name="comment" id="user-comment"></textarea>
 												<div class="placeholder">
-													需求备注
+													需求备注＊
 												</div>
 											</div>
 
 											<div class="form-row-special">
 												<div class="formitem-1 no-bottom-line">
 												<select class="dropdown-container menu-down select" name="gift">
-														<option value="">请选择</option>
+														<option value="-1">请选择</option>
 														<option value="1">是</option>
 														<option value="0">否</option>
 													</select>
@@ -997,15 +1162,15 @@ function initEditForm(data){
 										</div>
 										<div class="field-content">
 											<div>
-											<!-- 
+											
 												<div class="formitem">
-													<input type="text" value="ND129837" disabled>
+													<input type="text" value="创建中…" disabled>
 													<span></span>
 													<div class="placeholder">
 														需求ID
 													</div>
 												</div>
-												 -->
+												 
 												<div class="formitem">
 													<select id="zoneId_1" class="dropdown-container menu-down select"
 													 aimId="$(this).parent('.formitem').next('.formitem').find('select')"
@@ -1016,7 +1181,7 @@ function initEditForm(data){
 														</c:forEach>
 													</select>
 												<div class="placeholder">
-													城市
+													城市＊
 												</div>
 												</div>
 
@@ -1027,7 +1192,7 @@ function initEditForm(data){
 														<option value="">请选择</option>
 													</select>
 													<div class="placeholder">
-														区域
+														区域＊
 													</div>
 												</div>
 
@@ -1036,7 +1201,7 @@ function initEditForm(data){
 														<option value="">请选择</option>
 														</select>
 													<div class="placeholder">
-														区域细分
+														区域细分＊
 													</div>
 												</div>
 
@@ -1044,7 +1209,7 @@ function initEditForm(data){
 													<input type="text" name="houseInfo" placeholder="请输入楼盘信息">
 													
 													<div class="placeholder">
-														楼盘信息
+														楼盘信息＊
 													</div>
 												</div>
 
@@ -1075,7 +1240,7 @@ function initEditForm(data){
 															<option value="0">二手房</option>
 														</select>
 													<div class="placeholder">
-														房屋类别
+														房屋类别＊
 													</div>
 												</div>
 
@@ -1084,7 +1249,7 @@ function initEditForm(data){
 													<input type="text" name="area" placeholder="请输入装修面积">
 													<span>m²</span>
 													<div class="placeholder">
-														装修面积
+														装修面积＊
 													</div>
 												</div>
 
@@ -1117,9 +1282,8 @@ function initEditForm(data){
 
 												<div class="formitem">
 												<select name="hasSoft" class="dropdown-container menu-down select">
-														<option value="">请选择</option>
-														<option value="1">是</option>
 														<option value="0">否</option>
+														<option value="1">是</option>
 													</select>
 													
 													<div class="placeholder">
@@ -1134,16 +1298,15 @@ function initEditForm(data){
 											<div class="form-row">
 												<textarea name="comment" id="user-comment"></textarea>
 												<div class="placeholder">
-													需求备注
+													需求备注＊
 												</div>
 											</div>
 
 											<div class="form-row-special">
 												<div class="formitem-1 no-bottom-line">
 												<select class="dropdown-container menu-down select" name="gift">
-														<option value="">请选择</option>
-														<option value="1">是</option>
 														<option value="0">否</option>
+														<option value="1">是</option>
 													</select>
 													
 													
@@ -1160,7 +1323,7 @@ function initEditForm(data){
 									</div>
 							</div>
 							<div class="btnarea-right house_status_div">
-							<button class="btn btn-md data-delete">
+							<button class="btn btn-sm data-delete">
 												<i class="icon-trash-o"></i> 删除
 										</button>
 											

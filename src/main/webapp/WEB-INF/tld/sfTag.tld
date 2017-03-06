@@ -87,6 +87,22 @@ xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee/web-jsptaglibrary_2_0.xsd">
        <required>true</required>
        <rtexprvalue>true</rtexprvalue>
       </attribute>
+</tag>
+<tag>
+	<name>longtime</name>
+      <tagclass>com.sf.qzm.jspTag.TimeStampTag</tagclass>
+      <bodycontent>scriptless</bodycontent>
+    
+      <attribute>
+       <name>pattern</name>
+       <required>true</required>
+       <rtexprvalue>true</rtexprvalue>
+      </attribute>
       
+      <attribute>
+       <name>data</name>
+       <required>true</required>
+       <rtexprvalue>true</rtexprvalue>
+      </attribute>
 </tag>
 </taglib>

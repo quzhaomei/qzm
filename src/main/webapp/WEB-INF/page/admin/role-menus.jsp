@@ -13,7 +13,6 @@
 				heads:[
 				       {name:"roleName",title:"角色"},
 				       {name:"count",title:"用户数",style:"define",content:"<a href='#'>{count}</a>"},
-//				       {name:"status",title:"状态",style:"define",content:"<a href='#'>{count+status}</a>"}
 				       {name:"status",title:"状态",style:"status",alive:1}
 				       ],
 				 saveBtn:{powerCode:"system-role-add",save:function(react){
@@ -112,7 +111,7 @@
 						$.ajax({
 		                url: url,
 		                type:"post",
-		                data:JSON.stringify(processMenu(processMenu(json))),
+		                data:JSON.stringify(processMenu(json)),
 		                dataType:"json",
 		                contentType:"application/json",
 		                success:function(data){
@@ -134,7 +133,7 @@
 			if(menus.length&&menus.length>0){
 				$(menus).each(function(){
 					if(this.status==1){
-						arr.push({menuId:this.menuId,menuName:this.name,status:this.status});
+						arr.push({menuId:this.menuId,name:this.name,status:this.status});
 					}
 					if(this.childMenu&&this.childMenu.length>0){
 						processMenu(this.childMenu,arr)

@@ -60,6 +60,11 @@ public class ChannelServiceImpl implements ChannelService{
 	@Override
 	public void clear() {
 		channelDao.clear();
+	}
+
+	@Override
+	public List<ChannelDTO> list(Channel channel) {
+		return channelDao.list(channel);
 	}	
 
 }

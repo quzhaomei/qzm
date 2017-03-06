@@ -11,12 +11,15 @@ function parseRoles(roles){
 	return roles.map(function(temp){return temp.roleName});
 }
 
+
 var props={
 			title:"年龄段列表",
-			url:"constant/age-index.htmls?operator=list",
+			url:"system/age-index.htmls?operator=list",
 			whole:true,
-//			batch:true,
-			addBtn:{powerCode:"constant-age-save",callback:function(){$("#addModal").modal("show");$("#addModal").reset();}},
+			addBtn:{powerCode:"constant-age-save",callback:function(){
+					$("#addModal").modal("show");$("#addModal").reset();
+					}
+				},
 			head:[{name:"name",title:"年龄"},
 			      {name:"start",title:"开始",remove:true},
 			      {name:"end",title:"结束",remove:true}],
@@ -29,6 +32,8 @@ var props={
 			 			       toDelete(data);
 			 			}}]
 			};
+			
+			
 var reactData=$("#maincontents").render("Table_data",props,function(react_obj,dom){});
 </script>
 
@@ -49,16 +54,21 @@ var reactData=$("#maincontents").render("Table_data",props,function(react_obj,do
 									<div class="close"></div>
 								</div>
 								<div class="formsection">
-									<div class="form-row withicon">
-									<input type="text" placeholder="年龄段" id="name" autocomplete="off" maxlength="50" required><label for="name"><i class="icon-person"></i></label>
+									<div class="form-row">
+									<input type="text" placeholder="年龄段" 
+									id="name" autocomplete="off" maxlength="50" required>
+									<label for="name">年龄段</label>
 									<span></span>
 									</div>
-									<div class="form-row withicon">
-									<input type="text" placeholder="开始年龄" id="start" autocomplete="off" maxlength="50" required><label for="start"><i class="icon-person"></i></label>
+									<div class="form-row">
+									<input type="text" placeholder="开始年龄" id="start" 
+									autocomplete="off" maxlength="50" required>
+									<label for="start">开始</label>
 									<span></span>
 									</div>
-									<div class="form-row withicon">
-									<input type="text" placeholder="结束年龄" id="end" autocomplete="off" maxlength="50" required><label for="end"><i class="icon-person"></i></label>
+									<div class="form-row">
+									<input type="text" placeholder="结束年龄" id="end" autocomplete="off" 
+									maxlength="50" required><label for="end">结束</label>
 									<span></span>
 									</div>
 								</div>
@@ -83,34 +93,7 @@ var reactData=$("#maincontents").render("Table_data",props,function(react_obj,do
 $(function(){
 	//转换select控件
 	$(".sf-select").each(function(){//设置select
-		var _this=this;
-		var clazz=$(this).attr("class");
-		var $activeOption=$(this).find("option:selected");
-		var $contain=$("<div>").addClass(clazz);
-		
-		var $show=$("<div>").addClass("dropdown-title").text($activeOption.text());
-		var $body=$("<ul>").addClass("dropdown-menu");
-		$(this).find("option").each(function(){
-			$li=$("<li>").text($(this).text());
-			if($(this).attr("selected")){$li.addClass("active")};
-			$body.append($li);		
-		});
-		$contain.append($show).append($body);
-		$(this).hide().parent().append($contain);
-		//双向绑定
-		$show.on("click",function(){
-			$contain.toggleClass('shown');
-		});
-		$(".form-row-full input").on("focus",function(){
-			$contain.removeClass("shown");
-		});
-		$body.find("li").on("click",function(){
-			var index=$(this).index();
-			$(this).addClass('active').siblings().removeClass('active');
-			$show.text($(this).text());
-			$contain.removeClass('shown');
-			$(_this).find("option:eq("+index+")").attr("selected","selected");
-		});
+		$(this).smartSelect()
 	});
 	
 	$("#addModal").on("click",".close",function(){
@@ -169,8 +152,10 @@ $(function(){
 		param.name=name;
 		param.start=start;
 		param.end=end;
-		
-		$.post("constant/age-save.htmls",param,function(json){
+		var _this=this;
+		$(_this).attr("disabled","disabled");
+		$.post("system/age-save.htmls",param,function(json){
+			$(_this).removeAttr("disabled");
 			if(json.status==1){//保存成功
 				alert(json.message)
 				$("#addModal").modal("hide");
@@ -209,7 +194,7 @@ $(function(){
 		param.start=start;
 		param.end=end;
 		
-		$.post("constant/age-edit.htmls",param,function(json){
+		$.post("system/age-edit.htmls",param,function(json){
 			if(json.status==1){//成功，刷新数据
 				$("#editModal").modal("hide");
 				var pageIndex=reactData.state.pageIndex;
@@ -253,7 +238,7 @@ function initEditForm(data){
 
 function toDelete(data){
 	var ageId=data.ageId;
-	var url="constant/"+ageId+"/age-delete.htmls";
+	var url="system/"+ageId+"/age-delete.htmls";
 	if(confirm("确定删除吗？")){
 		$.post(url,function(json){
 			alert(json.message);
@@ -283,16 +268,22 @@ function toDelete(data){
 									<div class="close"></div>
 								</div>
 								<div class="formsection">
-									<div class="form-row withicon">
-									<input type="text" placeholder="年龄段" id="name_edit" autocomplete="off" maxlength="50" required><label for="name_edit"><i class="icon-person"></i></label>
+									<div class="form-row">
+									<input type="text" placeholder="年龄段" 
+									id="name_edit" autocomplete="off" maxlength="50" required>
+									<label for="name_edit">年龄段</label>
 									<span></span>
 									</div>
-									<div class="form-row withicon">
-									<input type="text" placeholder="开始年龄" id="start_edit" autocomplete="off" maxlength="50" required><label for="start_edit"><i class="icon-person"></i></label>
+									<div class="form-row">
+									<input type="text" placeholder="开始年龄" id="start_edit"
+									 autocomplete="off" maxlength="50" required>
+									 <label for="start_edit">开始</label>
 									<span></span>
 									</div>
-									<div class="form-row withicon">
-									<input type="text" placeholder="结束年龄" id="end_edit" autocomplete="off" maxlength="50" required><label for="end_edit"><i class="icon-person"></i></label>
+									<div class="form-row">
+									<input type="text" placeholder="结束年龄" id="end_edit" autocomplete="off" 
+									maxlength="50" required>
+									<label for="end_edit">结束</label>
 									<span></span>
 									</div>
 								</div>

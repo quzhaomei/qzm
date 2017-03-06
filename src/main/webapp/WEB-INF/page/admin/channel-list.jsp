@@ -251,7 +251,10 @@ $(function(){
 		param.code=code;
 		param.info=info;
 		param.typeId=typeId;
+		var _this=this;
+		$(_this).attr("disabled","disabled");
 		$.post("sysCustomer/channel-save.htmls",param,function(json){
+			$(_this).removeAttr("disabled");
 			if(json.status==1){//保存成功
 				alert(json.message)
 				$("#addModal").modal("hide");
@@ -271,7 +274,10 @@ $(function(){
 			return;
 		}
 		param.name=name;
+		var _this=this;
+		$(_this).attr("disabled","disabled");
 		$.post("sysCustomer/channel-type-save.htmls",param,function(json){
+			$(_this).removeAttr("disabled");
 			if(json.status==1){//保存成功
 				alert(json.message)
 				$(".right-container").reload();
@@ -306,7 +312,10 @@ $(function(){
 		param.info=info;
 		param.typeId=typeId;
 		param.status=status;
+		var _this=this;
+		$(_this).attr("disabled","disabled");
 		$.post("sysCustomer/channel-update.htmls",param,function(json){
+			$(_this).removeAttr("disabled");
 			if(json.status==1){//成功，刷新数据
 				$("#editModal").modal("hide");
 				var pageIndex=reactData.state.pageIndex;
@@ -328,7 +337,10 @@ $(function(){
 		var param={};
 		param.name=name;
 		param.typeId=editTemp.typeId;
+		var _this=this;
+		$(_this).attr("disabled","disabled");
 		$.post("sysCustomer/channel-type-update.htmls",param,function(json){
+			$(_this).removeAttr("disabled");
 				if(json.status==1){//保存成功
 					alert(json.message)
 					$(".right-container").reload();

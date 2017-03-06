@@ -19,7 +19,7 @@ import com.sf.qzm.service.SystemSourceService;
 public class LogAspect {
 	protected Logger logger = Logger.getLogger(this.getClass());
 	//切面配置
-	@Pointcut("execution(* com.sf.qzm.service.*.*(..))")
+	@Pointcut("execution(* com.sf.sptp.service.*.*(..))")
 	public void methodCachePointcut() {
 	}
 

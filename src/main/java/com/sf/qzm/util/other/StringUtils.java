@@ -1,5 +1,7 @@
 package com.sf.qzm.util.other;
 
+import net.sourceforge.pinyin4j.PinyinHelper;
+
 public class StringUtils {
 	/**
 	 * 判断字符串是否为空，包括null和"";
@@ -27,5 +29,16 @@ public class StringUtils {
 			
 		}
 		return "";
+	}
+	
+	
+	public static String getFirstChar(String str){
+		String result="";
+		if(str!=null){
+			for(char temp:str.toCharArray()){
+				result+=PinyinHelper.toHanyuPinyinStringArray(temp)[0].toUpperCase().toCharArray()[0];
+			}
+		}
+		return result;
 	}
 }

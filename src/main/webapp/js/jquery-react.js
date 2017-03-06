@@ -54,8 +54,12 @@
 						 reg+="var "+varible+"="+value_+"; ";
 					}
 					reg=reg.replace(/[\r\n]/g,"");
-					eval(reg);
-					value=eval(key);
+					try {
+						eval(reg);
+						value=eval(key);
+					} catch (e) {
+						value="";
+					}
 					result=value;
 				}
 				
@@ -83,14 +87,18 @@
 			$(menus.menu).each(function(){
 				var menu_li=$(parseTemplate(MENU_TEMPLATE,this)).on("click");
 				menu_li.data("menu",this);
+				menu_li.attr("id","menu"+this.menuId);
 				$menu_ul.append(menu_li)
 			});
 			
 			if(menus.menu_){
-				$menu_ul.append('<div class="divider"></div>');
+				if(menus.menu&&menus.menu.length>0){
+					$menu_ul.append('<div class="divider"></div>');
+				}
 				$(menus.menu_).each(function(){
 					var menu_li=$(parseTemplate(MENU_TEMPLATE,this));
 					menu_li.data("menu",this);
+					menu_li.attr("id","menu"+this.menuId);
 					$menu_ul.append(menu_li)
 				});
 			}
@@ -107,14 +115,21 @@
 			
 			if(menu==$("#main-subnav").data("menu")){
 				menu_toggle(menu.childMenu&&menu.childMenu.length>0);
+			}else if(menu.childMenu&&menu.childMenu.length==1){//默认打开
+				if($("#main-subnav")[0]){$("#main-subnav").remove()}
+				var default_menu=menu.childMenu[0];
+				callback(default_menu.url,default_menu);
+				menu_close();
+				
 			}else if(menu.childMenu&&menu.childMenu.length>0){
 				if($("#main-subnav")[0]){$("#main-subnav").remove()}
 				var $child_nav=$("<nav>").attr("id","main-subnav").addClass("anim");
 				$child_nav.append(parseTemplate(CHILD_HEAD,{title:menu.title}));
 				var $child_ul=$("<ul>");
 				$(menu.childMenu).each(function(){
+					this.parent=menu;
 					var $chile_li=$(parseTemplate(CHILD_TEMPLATE,this));
-					$chile_li.data("menu",this);
+					$chile_li.data("menu",this).attr("id","menu"+this.menuId);
 					$child_ul.append($chile_li);
 				});
 				$child_nav.append($child_ul);
@@ -132,11 +147,22 @@
 			e.preventDefault();
 			$(this).parent('li').addClass('active').siblings().removeClass('active');
 			var menu=$(this).parents("li").data("menu");
-				callback(menu.url);
+				callback(menu.url,menu);
 		});
 		$(".dynmic-menu").on("click",'#main-nav .showsub',function(){menu_open()})
 		$(".dynmic-menu").on("click",'#main-subnav .btn_hide',function(){menu_close(true)})
 		
+		
+		//处理ajax页面刷新问题
+		if(real_parent_id!=""){
+			$("#menu"+real_parent_id+" a").click();
+			if(real_child_id!=""){
+				setTimeout(function(){
+					$("#menu"+real_child_id+" a").click();
+				}, 100)
+				
+			}
+		}
 	}
 	
 	function menu_open(){
@@ -238,12 +264,26 @@
 	 	 	var count=0;
 			if(parent.status==1){
 	 	 		parent.status=0;
-	 	 		root.status=0;
+	 	 		//root.status=0;
 	 	 	}else{
 	 	 		parent.status=1;
-	 	 		root.status=1;
+	 	 		//root.status=1;
 	 	 	}
+			this.doRootStatus(root)
 	 	 	this.fresh(); 
+	 	 },
+	 	 doRootStatus:function(root){
+	 		 var count=0;
+	 		 $(root.childMenu).each(function(){
+	 			 if(this.status==1){
+	 				 count++;
+	 			 }
+	 		 });
+	 		 if(count==0){
+	 			root.status=0;
+	 		 }else{
+	 			 root.status=1;
+	 		 }
 	 	 },
 	 	 doSave:function(datas,obj){
 	 	 	if(this.state.status=="readonly"){
@@ -744,7 +784,7 @@
 		getInitialState: function() {
 			var _this=this;
 			var state={datas:[],pageIndex:1,pageSize:10,total:0,totalPage:0,
-				showPage:false,pageGroup:[10,20,25,50],
+				showPage:false,pageGroup:[10,20,25,50,100,200],
 				batch:_this.props.batch,filter:{type:0},hide:{},noData:true};
 				//设置默认排序
 			for(var i=0;i<this.props.head.length;i++){
@@ -783,7 +823,7 @@
 						_this.state.pageIndex=position;
 					}
 					_this.state.total=jsons.length;
-					_this.totalPage=Math.ceil(jsons.length/_this.state.pageSize);
+					_this.state.totalPage=Math.ceil(jsons.length/_this.state.pageSize);
 					_this.fresh();
 				},"json");
 			}else{//真分页
@@ -810,7 +850,6 @@
 					}else{
 						param.direction="desc";
 					}
-					
 				}
 
 				param.pageIndex=pageIndex;
@@ -833,9 +872,11 @@
 						if(value){
 							if(value.start){//时间
 								param[name+"_start"]=value.start;
-							}else if(value.end){
+							}
+							if(value.end){
 								param[name+"_end"]=value.end;
-							}else {
+							}
+							if(!value.hasOwnProperty("start")&&!value.hasOwnProperty("end")){
 								param[name]=value;
 							}
 						}
@@ -850,9 +891,47 @@
 					}
 					_this.state.total=page.count;
 					_this.state.totalPage=page.totalPage;
+					_this.state.statistics=page.statistics;//统计消息
 					_this.fresh();
 				},"json")
 			}
+		 },
+		 download:function(){
+			 var url=this.props.download.url;
+			 var param={};
+			//初始化查询参数
+			if(this.state&&this.state.filter&&this.state.filter.type==0&&this.state.filter.key){//关键词查询
+					param.key=this.state.filter.key;
+				}else if(this.state&&this.state.filter&&this.state.filter.type==1&&this.state.filter.column){
+					for(var name in this.state.filter.column){
+						var value=this.state.filter.column[name];
+
+						for(var inner=0;inner<this.props.head.length;inner++){
+							var column=this.props.head[inner];
+							if(name==column.name&&column.key){
+								name=column.key;
+							}
+						}
+						
+						if(value){
+							if(value.start){//时间
+								param[name+"_start"]=value.start;
+							}else if(value.end){
+								param[name+"_end"]=value.end;
+							}else {
+								param[name]=value;
+							}
+						}
+					}
+				}
+			
+			var $form=$("<form>").attr("method","post");
+			$form.attr("action",url);
+			for(var temp in param){
+				$form.append($("<input>").attr("name",temp).attr("value",param[temp]));
+			}
+			$form.submit();
+			 
 		 },
 		 turnToPage:function(e,index){
 		 		var totalPage=this.state.totalPage;
@@ -875,6 +954,7 @@
 		 		this.state.showPage=true;
 		 	}
 		 	if(this.props.whole){
+		 		this.state.totalPage=Math.ceil(this.state.datas.length/this.state.pageSize);//初始化总共页数
 		 		this.fresh();
 		 	}else{
 		 		this.initState();
@@ -1110,15 +1190,12 @@
 	 	 		}
 	 	 		if(val.length>0){//高级搜索
 	 	 			searchDom.value=val.join(",");
-	 	 			this.state.filter.type=1;
-	 	 			this.state.filter.key="";
-	 	 			$(searchDom).attr("readonly","readonly");
-	 	 		}else{//普通搜索
-	 	 			this.state.filter.type=0;
-	 	 			this.state.filter.key=searchDom.value;
-	 	 			$(searchDom).removeAttr("readonly","readonly");
-	 	 			key=searchDom.value;
-	 	 		} 		
+	 	 		}else{
+	 	 			searchDom.value="";
+	 	 		}
+	 	 		this.state.filter.type=1;
+	 	 		this.state.filter.key=" ";
+	 	 		$(searchDom).attr("readonly","readonly");
 	 	 	}else{
 	 	 		this.state.filter.type=0;
 		 	 	key=searchDom.value;
@@ -1130,7 +1207,8 @@
 			 this.state.filter.show=false;
 			 if(!this.props.whole){//真分页 后台查询
 			 	this.initState();
-			 }else{
+			 }else{//重新计算总页数
+				 
 			 	 this.fresh();
 			 }
 			
@@ -1169,6 +1247,7 @@
 
 	 	 				if(filter.column&&filter.column[column.name]){//进行过滤
 	 	 					var value=filter.column[column.name];
+	 	 					if(column.value&&value){value=value[column.value]};
 	 	 					if(column.group){
 	 	 						if(temp[column.name]!=value){
 	 	 							match=false;
@@ -1206,6 +1285,9 @@
 	 	 	}else{
 	 	 		aims=datas;
 	 	 	}
+	 	 	//重新计算页数
+	 	 	this.state.total=aims.length;
+	 	 	this.state.totalPage=Math.ceil(aims.length/this.state.pageSize);//初始化总共页数
 	 	 	return aims;
 	 	 },
 	 	 parseResult:function(column,data,index){
@@ -1234,6 +1316,7 @@
 					case "label":	
 						var group;
 						var statusTag=data[column.name];
+						if(column.value&&statusTag){statusTag=statusTag[column.value]};
 						if(column.group){
 							for(var i=0;i<column.group.length;i++){
 								if(statusTag==column.group[i].value){
@@ -1244,7 +1327,7 @@
 							if(group){
 								result=React.createElement("td", {className: "td-label"}, React.createElement("span", {className: group.className}, group.title));
 							}else{
-								result=React.createElement("td", {className: "td-label"}, React.createElement("span", null, data[column.name]));
+								result=React.createElement("td", {className: "td-label"}, React.createElement("span", null, ""));
 							}
 						}else{
 							result=React.createElement("td", null, React.createElement("span", {className: className}, parseTemplate(column.content,data)));
@@ -1271,6 +1354,7 @@
 					case "icon":
 						var group;
 						var statusTag=data[column.name];
+						if(column.value&&statusTag){statusTag=statusTag[column.value]};
 						for(var i=0;i<column.group.length;i++){
 							if(statusTag==column.group[i].value){
 								group=column.group[i];
@@ -1310,6 +1394,7 @@
 						var group;
 						if(column.group){
 							var statusTag=data[column.name];
+							if(column.value&&statusTag){statusTag=statusTag[column.value]};
 							for(var i=0;i<column.group.length;i++){
 								if(statusTag==column.group[i].value){
 									group=column.group[i];
@@ -1339,6 +1424,7 @@
 					case "icon":
 						var group;
 						var statusTag=data[column.name];
+						if(column.value&&statusTag){statusTag=statusTag[column.value]};
 						for(var i=0;i<column.group.length;i++){
 							if(statusTag==column.group[i].value){
 								group=column.group[i];
@@ -1348,7 +1434,7 @@
 						if(group){
 							content=group.title;						
 						}else{
-							content=data[column.name];
+							content=undefined;
 						}				
 						break;
 					case "date":
@@ -1491,17 +1577,105 @@
 
 
 				if(_this.props.specialOperator){
-					var operaArr=null;
-					operaArr=_this.props.specialOperator.map(function(temp){
-						return React.createElement(Icon_Btn, React.__spread({},  temp, {handClick: function(e){var tempDate=datas[$(e.target).parents(".toolicons").data("index")];temp.callback(tempDate)}}));
+					var operaArr=[];
+					
+					var operaArrReal=_this.props.specialOperator.map(function(temp){
+						if(temp.filter){//按内容显示
+							var match=false;
+							if(temp.filter instanceof Array){//数组
+								match=true;
+									for(var index_fl=0;index_fl<temp.filter.length;index_fl++){
+										var temp_match=false;
+										var column_filter=temp.filter[index_fl].column;
+										var values=temp.filter[index_fl].values;
+										var current_value=data[column_filter];
+										
+										for(var index_f=0;index_f<values.length;index_f++){
+											if(values[index_f]==current_value){
+												temp_match=true;
+												break;
+											}else{
+												temp_match=false;
+											}
+										}
+										match=match&&temp_match;
+									}
+								}else{
+									var column_filter=temp.filter.column;
+									var values=temp.filter.values;
+									var current_value=data[column_filter];
+									for(var index_f=0;index_f<values.length;index_f++){
+										if(values[index_f]==current_value){
+											match=true;
+											break;
+										}
+									}
+								}
+							if(match){
+								return React.createElement(Icon_Btn, React.__spread({},  temp, {handClick: function(e){var tempDate=datas[$(e.target).parents(".toolicons").data("index")];temp.callback(tempDate)}}));
+							}else{
+								return null;
+							}	
+							
+							
+						}else{
+							return React.createElement(Icon_Btn, React.__spread({},  temp, {handClick: function(e){var tempDate=datas[$(e.target).parents(".toolicons").data("index")];temp.callback(tempDate)}}));
+						}
 					});
+					
+					for(var inner=0;inner<_this.props.specialOperator.length;inner++){
+						var temp=_this.props.specialOperator[inner];
+						if(temp.filter){//按内容显示
+							var match=false;
+							if(temp.filter instanceof Array){//数组
+								match=true;
+								for(var index_fl=0;index_fl<temp.filter.length;index_fl++){
+									var temp_match=false;
+									var column_filter=temp.filter[index_fl].column;
+									var values=temp.filter[index_fl].values;
+									var current_value=data[column_filter];
+									
+									for(var index_f=0;index_f<values.length;index_f++){
+										if(values[index_f]==current_value){
+											temp_match=true;
+											break;
+										}else{
+											temp_match=false;
+										}
+									}
+									match=match&&temp_match;
+								}
+							}else{
+								var column_filter=temp.filter.column;
+								var values=temp.filter.values;
+								var current_value=data[column_filter];
+								for(var index_f=0;index_f<values.length;index_f++){
+									if(values[index_f]==current_value){
+										match=true;
+										break;
+									}
+								}
+							}
+							
+							if(match){
+								operaArr.push(React.createElement(Icon_Btn, React.__spread({},  temp, {handClick: function(e){var tempDate=datas[$(e.target).parents(".toolicons").data("index")];temp.callback(tempDate)}})));
+							}	
+						}else{
+							operaArr.push(React.createElement(Icon_Btn, React.__spread({},  temp, {handClick: function(e){var tempDate=datas[$(e.target).parents(".toolicons").data("index")];temp.callback(tempDate)}})));
+						}
+					}
+					
+					
+					var operaArrSpan=null;
+					if(operaArr&&operaArr.length&&operaArr.length>0){
+						operaArrSpan=React.createElement("span", null, 
+								React.createElement("i", {className: "icon-add_box"}), 
+								React.createElement("div", {style: {display:"none"}, className: "toolicons", "data-index": index}, 
+									operaArrReal
+								));
+					}
 					td.push(React.createElement("td", {className: "td-icon ops", onMouseEnter: mouseenter, onMouseLeave: mouseleave}, 
-						React.createElement("span", null, 
-						React.createElement("i", {className: "icon-add_box"}), 
-						React.createElement("div", {style: {display:"none"}, className: "toolicons", "data-index": index}, 
-						operaArr
-						)
-						)
+							operaArrSpan
 						));
 				}
 				var mouseenter_normal=function(e){var src=e.target;if(src.tagName!="TR"){src=$(src).parents("TR")[0]};
@@ -1580,11 +1754,11 @@
 				if(this.state.pageIndex+Math.ceil(viewNum/2-1)<totalPage){
 					pagination.push(React.createElement("div", {className: "eclipse"}, React.createElement("i", {className: "icon-more_horiz"})));
 				}else {
-					pagination.push(React.createElement("div", {onClick: _this.turnToPage, "data-page": totalPage-1, 
+					pagination.push(React.createElement("div", {onClick: _this.turnToPage, "data-page": totalPage-1,  key: totalPage-1, 
 						className: this.state.pageIndex==totalPage-1?'page active':'page'}, totalPage-1));
 				}
 
-				pagination.push(React.createElement("div", {onClick: _this.turnToPage, "data-page": totalPage, className: this.state.pageIndex==totalPage?'page active':'page'}, totalPage));
+				pagination.push(React.createElement("div", {onClick: _this.turnToPage, "data-page": totalPage,key: totalPage,  className: this.state.pageIndex==totalPage?'page active':'page'}, totalPage));
 				pagination.push(React.createElement("div", {className: "next", onClick: function(e){_this.turnToPage(e,_this.state.pageIndex+1)}}, React.createElement("i", {className: "icon-navigate_next"})));
 			}
 
@@ -1596,10 +1770,10 @@
 			var className="pagination pagecenter";
 
 			if(_this.props.whole&&_this.state.pageIndex==totalPage&&
-				(datas.length+5<_this.state.pageSize*totalPage)){
+				(datas.length<=_this.state.pageSize*(totalPage-1)+2)){
 				className+=" bottom-fix"
 			};
-			if(!_this.props.whole&&datas.length<=5){
+			if(!_this.props.whole&&datas.length<=2){
 				className+=" bottom-fix";
 			}
 
@@ -1799,7 +1973,27 @@
 									)																								
 								);
 			}
-
+			var download=null;
+			if(_this.props.download){
+				download=React.createElement("div", {className: "operationbar"}, 
+						React.createElement("div", {className: "btnarea-right full"}, 
+							React.createElement(Icon_Btn, {title: "数据下载", icon: "icon-cloud-download",type:"2",
+								powerCode: _this.props.download.powerCode,
+								handClick: _this.download})
+						)	
+					)
+			}
+			var statistics=[React.createElement("ul", null, 
+							React.createElement("li", null, "总数"), 
+							React.createElement("li", null, _this.state.total))];
+			if(_this.props.statistics&&_this.state.statistics){
+				for(var index=0;index<_this.props.statistics.length;index++){
+					var temp_=_this.props.statistics[index];
+					statistics.push(React.createElement("ul", null, 
+							React.createElement("li", null, temp_.title), 
+							React.createElement("li", null, _this.state.statistics[temp_.column])));
+				}
+			}
 		 	return React.createElement("div", {className: "panel with-table-side"}, 
 							React.createElement("div", {className: "panel-title"}, 
 								React.createElement("span", null, 
@@ -1863,21 +2057,12 @@
 
 											React.createElement("div", {className: "statistic"}, 
 												React.createElement("div", {className: "title"}, 
-													React.createElement("span", null, "数据统计及下载")
+													React.createElement("span", null, "数据统计")
 												), 
 												React.createElement("div", {className: "contents"}, 
-													React.createElement("ul", null, 
-														React.createElement("li", null, "总数"), 
-														React.createElement("li", null, _this.state.total)
-													)
+														statistics
 												), 
-												React.createElement("div", {className: "operationbar"}, 
-													React.createElement("div", {className: "btnarea-right full"}, 
-														React.createElement("button", {className: "btn-square", title: "数据下载"}, 
-															React.createElement("i", {className: "icon-cloud-download"})
-														)
-													)	
-												)
+												download
 											), 
 
 
@@ -1895,13 +2080,8 @@
 											
 										)
 									)
-
-
-
 								)
-									
 							)
-													
 						)
 		 }
 		});
@@ -1980,23 +2160,26 @@
 				break;
 			}
 		},
-		open:function(url){
+		open:function(url,callback){
 			//保存访问记录
 			SetCookie("current-url",url);
-			this.empty().load(url);
+			this.empty().load(url,callback);
 		},
 		reload:function(){
 			var url=getCookie("current-url");
 			this.empty().load(url);
 		},
 		reset:function(){
-			this.find("input").val("");
+			this.find("input[type='text']").val("");
+			
 			this.find("textarea").val("");
 			this.find("select").each(function(){
 				$(this).find("option").removeAttr("selected");
 				$(this).find("option:eq(0)").attr("selected","selected");
 				$(this).change();
 			});
+			this.find("input[type='radio']").removeAttr("checked");
+			this.find("input[type='checkbox']").removeAttr("checked");
 		},
 		validator:function(param){//验证框架
 			var _this=this;
@@ -2058,19 +2241,39 @@
 				$(this).data("parent",$(this).parent());
 				var aim=$(this).data("parent");
 				$(this).show();
-				$("#modelContainer").empty().append(this);
-				$("#modelContainer").removeClass("offstage");$("#modelContainer").show();
+				var $containner=$('<div class="overlay ol-dark" style="display:none;"></div>');
+				$containner.append(this);
+				$containner.removeClass("offstage");
+				$containner.show();
+				$("body").append($containner);
 			}else if(param=="hide"){
-				
 				$(this).hide();
 				var aim=$(this).data("parent");
+				var $containner=$(this).parent(".overlay");
 				$(this).data("parent").append($(this));
 				
-				$("#modelContainer").empty();
-				$("#modelContainer").addClass("offstage");$("#modelContainer").hide();
+				$containner.addClass("offstage");
+				$containner.remove();
 			}
 		},
 		initForm:function(data){
+			//按属性初始化
+			this.find("[data-ref]").each(function(){
+				var varible=$(this).attr("data-ref");
+				if(varible&&data[varible]){
+					var fmt=$(this).attr("data-fmt");
+					if(fmt){
+						var date=new Date(parseInt(data[varible], 10));
+						var value=date.format(fmt);
+						$(this).text(value);
+						$(this).val(value);
+					}else{
+						$(this).text(data[varible]);
+						$(this).val(data[varible]);
+					}
+				}
+			});
+			
 			this.find("[name]").each(function(){
 				var name=$(this).attr("name");
 				var value;
@@ -2089,6 +2292,10 @@
 				}else{
 					value=data[name];
 				}
+				if(!value){
+					value="";
+				}
+				
 				if(this.tagName=="INPUT"){
 					if(this.type=="radio"){
 						if(this.value==value){
@@ -2117,11 +2324,20 @@
 			if(this[0].tagName!="SELECT"){
 				return;
 			}
+			
 			if(this.data("changeSelect")){
 				return;
 			}else{
 				this.data("changeSelect","true");
 			}
+			
+			if(this.attr("disabled")){
+				this.hide();
+				var  value=$(this).find("option:selected").text();
+				this.parent().append($('<input type="text">').val(value).attr("disabled","disabled"));
+				return;
+			}
+			
 			var selectClass="active";
 			if(this.hasClass("multi")){
 				this[0].multiple="multiple";//设置为多选
@@ -2199,6 +2415,10 @@
 				if(!_this.hasClass("multi")){
 					var $options=$(this).find("option:selected");
 					var index=$options.index();
+					//判断第一个
+					var f_value=$(this).find("option:eq(0)").val();
+					if(f_value==""){index--;}
+					
 					var li=$body.find("li:eq("+index+")");
 					$(li).addClass(selectClass).siblings().removeClass(selectClass);
 					$show.text($options.text());
@@ -2256,8 +2476,7 @@
 	  
 	    str=str.replace(/yyyy|YYYY/,this.getFullYear());   
 	    str=str.replace(/yy|YY/,(this.getYear() % 100)>9?(this.getYear() % 100).toString():'0' + (this.getYear() % 100));   
-	  
-	    str=str.replace(/MM/,this.getMonth()>9?this.getMonth().toString():'0' + (this.getMonth()+1));   
+	    str=str.replace(/MM/,this.getMonth()>8?(this.getMonth()+1).toString():'0' + (this.getMonth()+1));   
 	    str=str.replace(/M/g,(this.getMonth()+1));   
 	  
 	    str=str.replace(/w|W/g,Week[this.getDay()]);   
@@ -2278,7 +2497,65 @@
 	
 })();
 
+function openPage(menu){
+	document.title=menu.title;//替换标题
+	$(".right-container").open("./"+menu.url,function(){
+		$(this).find('.datetimepicker').datetimepicker({
+			lang:'ch',
+			timepicker:false,
+			format:'Y-m-d',
+			formatDate:'Y-m-d',
+			yearStart: '2016',
+			minDate:'-2016/08/02', // yesterday is minimum date
+		});
+		
+		$("header .t-rd").text(menu.title);
+		var url="./"+menu.url;
+		if(url.indexOf("?")==-1){
+			url=url+"?ajaxTag_=1";
+		}else{
+			url=url+"&ajaxTag_=1";
+		}
+		var state={title:"测试",url:+menu.url,param:menu};
+		window.history.pushState(state, document.title, url);
+		
+		$.post("welcome/dailyMessage.htmls",function(json){
+			var $div=$("<div>").addClass("notification");
+			if($("header .notification")[0]){$("header .notification").remove();}
+			var $span_1=$("<span>");
+			var $span_2=$("<span>").addClass("help").html("<a href='/static/help.html' target='_blank'>操作帮助</a>");
+			$("header").append($div);
+			$div.append($span_1);
+			$div.append($span_2);
+			var $i=$("<i>").addClass("icon-notifications_none");
+			if(json&&json.length&&json.length>0){
+				$i.append('<div class="dot"></div>')
+			}
+			$span_1.append($i);
+			
+			var $ul_message=$("<ul>").addClass("noti_list");
+			$(json).each(function(){
+				var $li=$("<li>").text(this.message);
+				$li.data("data",this);
+				$ul_message.append($li);
+				$span_1.append($ul_message);
+			});
+		
+		},"json");
+		
+	});
+}
+
+
 $(function(){
+	//
+	$("#main-container").on("click",".notification .noti_list li",function(){
+		var notice=$(this).data("data");
+		if(notice&&notice.url){
+			window.location.href=notice.url;
+		}
+	});
+	
 	//退出
 	$("body").on("click","#logout",function(){
 		if(confirm("确定退出吗（将清空所有登录信息） ？")){
@@ -2287,7 +2564,6 @@ $(function(){
 	});
 	//检测登录状态
 	var check=setInterval(function(){
-		return;
 		$.post("welcome/sss_check.htmls",function(json){
 			if(json){
 				if(json.type!=1){
@@ -2301,27 +2577,50 @@ $(function(){
 				window.location.href="adminLogin/loginOut.htmls";
 			}
 		},"json")
-	}, 5000)
+	}, 10000)
+	
 	
 	$.SF.setConfig("powerCheckUrl","welcome/checkPower.htmls");
 	
-	$("#main-container .left-container").menu("welcome/menu-info.htmls",function(url){
-		$(".right-container").open("./"+url);
-	});
+	window.addEventListener('popstate', function(e){
+		  if (history.state){
+		    var menu=history.state.param;
+		    var parent=menu.parent;
+		    if(parent){
+		    	if($("#menu"+parent.menuId).hasClass("active")){
+		    		$("#menu"+menu.menuId+" a").click();
+		    	}else{
+		    		$("#menu"+parent.menuId+" a").click();
+		    		setTimeout(function(){$("#menu"+menu.menuId+" a").click()}, 100);
+		    	}
+		    }
+		  }
+		}, false);
 	
+	
+	
+	$("#main-container .left-container").menu("welcome/menu-info.htmls",function(url,menu){
+		
+		openPage(menu);
+		
+	});
+	$("body").on("click",".closable .close",function(){
+		$(this).parents(".closable").hide();
+	})
 	$("body").on('click', 'button', function(event) {
+		var _this=this;
 		$(this).addClass('focus')
-	}).on('mouseup', 'button', function(event) {
-		var _this = $(this);
-		setTimeout(function(){_this.removeClass('focus');},200);		
-	});
+		setTimeout(function(){$(_this).removeClass('focus');},200);		
+	})
+
+	//	.on('mouseup', 'button', function(event) {var _this = $(this);});
 	
-	$("body").on('click', '#maincontents,.overlay button,.btn', function(event) {
-		$(this).addClass('focus');
-	}).on('mouseup', 'button,.btn', function(event) {
-		var _this = $(this);
-		setTimeout(function(){_this.removeClass('focus');},200);
-	});
+//	$("body").on('click', '#maincontents,.overlay button,.btn', function(event) {
+//		$(this).addClass('focus');
+//	}).on('mouseup', 'button,.btn', function(event) {
+//		var _this = $(this);
+//		setTimeout(function(){_this.removeClass('focus');},200);
+//	});
 	
 	
 	//关闭modal
@@ -2383,5 +2682,19 @@ $(function(){
 	$(document).ajaxStart(ajaxAlertOpen);
 	$(document).ajaxStop(ajaxAlertHide);
 	
+	$("body").on("click","button[href]",function(){
+		var href_url=$(this).attr("href");
+		if(href_url){
+			window.location.href=href_url;
+		}
+	});
+	
+	//点击头像
+	$("body").on("click",".avatar",function(){
+		$("#updatePriModal").modal("show");
+	});
+	
 });
+
+
 

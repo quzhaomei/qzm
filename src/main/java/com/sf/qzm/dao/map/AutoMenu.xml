@@ -38,7 +38,9 @@
 		 where 1=1 and a1.type=0 and a1.parentCode is null
 		 order by a1.sequence,a2.sequence
 	</select>
-	
+	<update id="clear">
+		select 1 from dual
+	</update>
 	<select id="getAdminNavMenuByUserId" resultMap="adminMenu">
 	select a1.`menuId`,a1.`name`,a1.`sequence`,a1.`servletUrl`,a1.`icon`,a1.`extend`
 			,a2.menuId menuId_c,a2.name name_c,a2.servletUrl servletUrl_c,a2.`extend` extend_c

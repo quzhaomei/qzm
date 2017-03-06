@@ -2,6 +2,8 @@ package com.sf.qzm.bean.biz;
 
 import java.util.Date;
 
+import org.springframework.format.annotation.DateTimeFormat;
+
 public class CustomerHouse {
 	/**
 	 * 房子id
@@ -44,10 +46,7 @@ public class CustomerHouse {
 	 * 装修预算
 	 */
 	private Integer budgetId;
-	/**
-	 * 是否有软装需求 0-没有，1-有
-	 */
-	private Integer hasSoft;
+	
 	/**
 	 * 客户备注
 	 */
@@ -70,6 +69,15 @@ public class CustomerHouse {
 	 * 0-未发布，1-已发布,2-已派单,3-关闭
 	 */
 	private Integer status;
+	/**
+	 * 是否有软装需求 0-没有，1-有
+	 */
+	private Integer hasSoft;
+	
+	/**
+	 * 0-未派单，1-已派单,2-关闭
+	 */
+	private Integer softStatus;//软装状态
 	
 	/**
 	 * 是否配送了礼包，0-否，1-是
@@ -80,11 +88,17 @@ public class CustomerHouse {
 	 */
 	private String giftAddress;
 	
+	private Integer isDelete;
 	
 	/**
 	 * 辅助字段开始	 */
 	private Integer zoneRootId;
 	private Integer zoneParentId;
+	
+	@DateTimeFormat(pattern="yyyy-MM-dd")
+	private Date createDate_start;
+	@DateTimeFormat(pattern="yyyy-MM-dd")
+	private Date createDate_end;
 	
 	
 	
@@ -214,5 +228,44 @@ public class CustomerHouse {
 	public void setCallbackTips(String callbackTips) {
 		this.callbackTips = callbackTips;
 	}
+	public Date getCreateDate_start() {
+		return createDate_start;
+	}
+	public void setCreateDate_start(Date createDate_start) {
+		this.createDate_start = createDate_start;
+	}
+	public Date getCreateDate_end() {
+		return createDate_end;
+	}
+	public void setCreateDate_end(Date createDate_end) {
+		this.createDate_end = createDate_end;
+	}
 	
+	public Integer getIsDelete() {
+		return isDelete;
+	}
+	public void setIsDelete(Integer isDelete) {
+		this.isDelete = isDelete;
+	}
+	
+	public Integer getSoftStatus() {
+		return softStatus;
+	}
+	public void setSoftStatus(Integer softStatus) {
+		this.softStatus = softStatus;
+	}
+	public String noReadyMsg(){
+		if(this.getZoneId()==null){
+			return "＊区域未填写 或 未提交";
+		}else if(this.getHouseInfo()==null){
+			return "＊楼盘信息未填写 或 未提交";
+		}else if(this.getIsNew()==null){
+			return "＊房屋类别未填写 或 未提交";
+		}else if(this.getArea()==null){
+			return "＊装修面积未填写 或 未提交";
+		}else if(this.getComment()==null){
+			return "＊需求备注未填写 或 未提交";
+		}
+		return null;
+	}
 }

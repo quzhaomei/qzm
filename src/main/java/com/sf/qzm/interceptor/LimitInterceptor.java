@@ -13,8 +13,10 @@ import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 import com.sf.qzm.annotation.LoginTag;
 import com.sf.qzm.annotation.MenuTag;
 import com.sf.qzm.bean.login.LoginOutMessage;
+import com.sf.qzm.bean.menu.AutoMenu;
 import com.sf.qzm.dto.JsonDTO;
 import com.sf.qzm.dto.admin.AdminUserDTO;
+import com.sf.qzm.service.AutoMenuService;
 import com.sf.qzm.util.context.SfContextUtils;
 import com.sf.qzm.util.other.Constant;
 import com.sf.qzm.util.other.JsonUtils;
@@ -52,6 +54,22 @@ public class LimitInterceptor extends HandlerInterceptorAdapter {
 						(adminUser.getPhone() != null && adminUser.getPhone().equals(godPhone))
 						||
 						(adminUser.getMenuCodeMap().get(menu.code())!=null) ){
+						String ajaxTag=request.getParameter("ajaxTag_");
+						if(ajaxTag!=null){
+							AutoMenu real_menu=SfContextUtils.getComponent(AutoMenuService.class).getByCode(menu.code());
+							if(real_menu!=null){
+								request.setAttribute("real_child_id",real_menu.getMenuId());
+								AutoMenu real_parent=SfContextUtils.getComponent(AutoMenuService.class).getByCode(real_menu.getParentCode());
+								if(real_parent!=null){
+									request.setAttribute("real_parent_id",real_parent.getMenuId());
+								}
+							}
+							
+							request.getRequestDispatcher("/welcome/index.htmls").forward(request, response);
+							return false;
+						}
+					
+					
 							return true;
 						}else{
 							 return processUnUrlLimit(request, response);
@@ -150,6 +168,8 @@ public class LimitInterceptor extends HandlerInterceptorAdapter {
 			response.getOutputStream().write(JsonUtils.object2json(json).getBytes("utf-8"));
 		} else {
 			String orignUrl = request.getServletPath();// 原请求url
+			String param=request.getQueryString();
+			if(param!=null){orignUrl=orignUrl+"?"+param;}
 			String contentPath = request.getContextPath();
 			request.getSession().setAttribute(Constant.LOGIN_REDIRECT_URL, orignUrl);
 			// 跳转登录页面

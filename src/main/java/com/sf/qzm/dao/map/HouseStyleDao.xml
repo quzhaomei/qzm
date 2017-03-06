@@ -5,21 +5,46 @@
 <resultMap type="com.sf.qzm.bean.constant.HouseStyle" id="style">
 	<id property="styleId" column="styleId"/>
 	<result property="name" column="name" />
-	<result property="price" column="price" />
 	<result property="isDelete" column="isDelete" />
-	
 </resultMap>
-	<insert id="save" >
-		insert into house_style(name,price)
-		values(#{style.name},#{style.price})
+<resultMap type="com.sf.qzm.dto.biz.CompanyToStylePriceDTO" id="companyToStylePrice">
+	<id property="companyId" column="companyId"/>
+	<result property="storeName" column="storeName" />
+	<result property="price" column="price" />
+	<result property="styleId" column="styleId" />
+	<result property="createDate" column="createDate" />
+	<association property="createUser" column="createUserId" javaType="com.sf.qzm.dto.admin.AdminUserDTO">
+			<id property="adminUserId" column="createUserId"/>
+			<result property="nickname" column="nickname"/>
+	</association>
+</resultMap>
+	<insert id="save" useGeneratedKeys="true" keyProperty="style.styleId">
+		insert into house_style(styleId,name)
+		values(#{style.styleId},#{style.name})
 	</insert>
+	
+	<insert id="savePrice" >
+		insert into company_to_style(price,typeId,styleId,companyId,createDate,createUserId)
+		values
+		 <foreach collection="sets"  item="set" index="index" separator="," >  
+		(#{set.price},#{set.typeId},#{set.styleId},#{set.companyId},#{set.createDate},#{set.createUserId})
+		</foreach>
+	</insert>
+	
+	<delete id="clearPrice">
+		delete from company_to_style where styleId=#{styleId} 
+		<if test="companyId!=null">
+		and companyId = #{companyId}
+		</if>
+		<if test="companyId==null">
+		and companyId is null
+		</if>
+	</delete>
+	
 	<update id="update">
 		update house_style set styleId=#{style.styleId}
 			<if test="style.name!=null">
 				,name=#{style.name}
-			</if>
-			<if test="style.price!=null">
-				,price=#{style.price}
 			</if>
 			<if test="style.isDelete!=null">
 				,isDelete=#{style.isDelete}
@@ -28,7 +53,7 @@
 	</update>
 	
 	<select id="get" resultMap="style">
-		select c.styleId,c.price,c.name,c.isDelete
+		select c.styleId,c.name,c.isDelete
 		 from house_style c
 		    where (c.isDelete=0 or c.isDelete is null) 
 		    <if test="style.styleId!=null">
@@ -36,7 +61,7 @@
 			</if>
 	</select>
 	<select id="list" resultMap="style">
-			select c.styleId,c.price,c.name,c.isDelete
+			select c.styleId,c.name,c.isDelete
 		 from house_style c
 		    where (c.isDelete=0 or c.isDelete is null) 
 		    <if test="style.styleId!=null">
@@ -48,6 +73,31 @@
 		
 	</select>
 	
+	<select id="getCompanyPriceByStyle" resultType="map">
+		select c.companyId,
+		c.storeName,
+		 <foreach collection="types"  item="type" index="index" separator="," > 
+		case when isnull((select ctt.id from company_to_type ctt where
+		 ctt.companyId=c.companyId and ctt.typeId=#{type.typeId}))
+		 	then -1 else (select cts.price from company_to_style cts 
+			where cts.styleId=#{styleId} 
+			and cts.companyId =c.companyId
+			and cts.typeId=#{type.typeId})
+			end  as "${type.typeId}"
+		</foreach>
+		from company c
+		order by c.companyId
+	</select>
+	<select id="getDefaultPrice" resultType="map">
+		select 
+		hs.styleId,hs.name,
+		 <foreach collection="types"  item="type" index="index" separator="," >  
+		(select cts.price from company_to_style cts 
+		where cts.styleId=hs.styleId and cts.companyId is null and cts.typeId=#{type.typeId}) as "${type.typeId}"
+		</foreach>
+		 from house_style hs 
+		 order by hs.styleId
+	</select>
 	
 	
 </mapper>  

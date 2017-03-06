@@ -1,7 +1,5 @@
 package com.sf.test.testService;
 
-import java.util.Date;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Value;
@@ -9,9 +7,8 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.sf.qzm.bean.login.LoginCookie;
-import com.sf.qzm.dao.LoginCookieDao;
 import com.sf.qzm.dao.SystemSourceDao;
+import com.sf.qzm.service.ActivityPeopleService;
 import com.sf.qzm.util.context.SfContextUtils;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -24,12 +21,15 @@ public class TestSpring extends AbstractJUnit4SpringContextTests {
 	public void test(){
 		System.out.println(SfContextUtils.getComponent(SystemSourceDao.class).executeSql("select @@basedir as basePath from dual  "));
 	}
+	
 	@Test
 	public void test1(){
-		LoginCookie cookie=new LoginCookie();
-		cookie.setCreateDate(new Date());
-		cookie.setIp("xxxx");
-		cookie.setLoginname("xsadad");
-		SfContextUtils.getComponent(LoginCookieDao.class).save(cookie);
+		try {
+			System.out.println(SfContextUtils.getComponent(ActivityPeopleService.class).getById(1));
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 }
+

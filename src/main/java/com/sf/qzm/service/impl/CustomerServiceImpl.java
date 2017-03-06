@@ -97,4 +97,19 @@ public class CustomerServiceImpl implements CustomerService {
 		return customerDao.getByIds(ids);
 	}
 
+	@Override
+	public List<CustomerDTO> download(PageDTO<Customer> page) {
+		return customerDao.listByPage(page);
+	}
+
+	@Override
+	public void fresh() {
+		customerDao.fresh();
+	}
+
+	@Override
+	public int count(Customer customer) {
+		return customerDao.count(customer);
+	}
+
 }

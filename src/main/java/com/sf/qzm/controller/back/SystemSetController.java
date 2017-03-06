@@ -3,7 +3,6 @@ package com.sf.qzm.controller.back;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -21,15 +20,27 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.sf.qzm.annotation.MenuTag;
 import com.sf.qzm.bean.admin.AdminUser;
 import com.sf.qzm.bean.admin.RoleManager;
+import com.sf.qzm.bean.biz.CompanyType;
+import com.sf.qzm.bean.biz.MessageTemplate;
+import com.sf.qzm.bean.constant.Age;
+import com.sf.qzm.bean.constant.Budget;
+import com.sf.qzm.bean.constant.HouseStyle;
 import com.sf.qzm.controller.BaseController;
 import com.sf.qzm.dto.JsonDTO;
 import com.sf.qzm.dto.admin.AdminUserDTO;
 import com.sf.qzm.dto.admin.RoleManagerDTO;
+import com.sf.qzm.dto.biz.MessageTemplateDTO;
 import com.sf.qzm.dto.menu.PowerMenuDTO;
 import com.sf.qzm.service.AdminUserService;
+import com.sf.qzm.service.AgeService;
 import com.sf.qzm.service.AutoMenuService;
+import com.sf.qzm.service.BudgetService;
+import com.sf.qzm.service.CompanyTypeService;
+import com.sf.qzm.service.HouseStyleService;
+import com.sf.qzm.service.MessageTemplateService;
 import com.sf.qzm.service.RoleManagerService;
 import com.sf.qzm.service.RoleToMenusService;
+import com.sf.qzm.util.other.Constant;
 import com.sf.qzm.util.other.JsonUtils;
 import com.sf.qzm.util.other.PasswordUtils;
 import com.sf.qzm.util.other.StringUtils;
@@ -47,12 +58,14 @@ public class SystemSetController extends BaseController{
 	@Resource
 	private AdminUserService adminUserService;
 	
-	
-	@MenuTag(code = "system-sysSet", name = "系统设置及维护", sequence = 3, type = 1 )
+	/**
+	@MenuTag(code = "system-sysSet", name = "系统设置及维护", sequence = 23, type = 1 )
 	@RequestMapping(value = "/sysSet")
 	public void sysSet() {
 		
 	}
+	 * 
+	 */
 	
 	/**
 	 * {menuId:"1",name:"系统模块设置",
@@ -159,6 +172,7 @@ public class SystemSetController extends BaseController{
 		}
 		try {
 			roleToMenusService.setPowerForRole(roleId, menuIds);
+			menuService.clear();
 			result.setStatus(1).setMessage("设置成功!");
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -197,8 +211,6 @@ public class SystemSetController extends BaseController{
 			json.setStatus(0).setMessage("昵称不能为空");
 		}else if(loginname==null){
 			json.setStatus(0).setMessage("用户名不能为空");
-		}else if(!loginname.matches("[a-zA-Z]+\\w{5,49}")){
-			json.setStatus(0).setMessage("用户名格式不正确");
 		}else if(phone==null){
 			json.setStatus(0).setMessage("手机不能为空");
 		}else if(!phone.matches("1[3|4|5|6|7|8]\\d{9}")){
@@ -320,6 +332,327 @@ public class SystemSetController extends BaseController{
 			} catch (Exception e) {
 				json.setStatus(0).setMessage("更新过程中系统出现异常");
 			}
+		}
+		return json;
+	}
+	
+
+	/*** 年龄段开始 */
+	@Resource
+	private AgeService ageService;
+
+	@MenuTag(code = "constant-age-index", name = "年龄段管理", sequence = 10, type = 1)
+	@RequestMapping(value = "/age-index")
+	public String ageIndex(String operator, Map<String, Object> map) {
+		if (Constant.LIST.equals(operator)) {
+			List<Age> ages = ageService.all();
+			map.put(Constant.JSON, JsonUtils.object2json(ages));
+			return Constant.JSON;
+		}
+		return "admin/age-list";
+	}
+
+	@MenuTag(code = "constant-age-save", name = "添加年龄段", sequence = 1, type = 2, parentCode = "constant-age-index")
+	@RequestMapping(value = "/age-save")
+	@ResponseBody
+	public JsonDTO ageSave(Age age) {
+		JsonDTO json = new JsonDTO();
+		try {
+			ageService.saveOrUpdate(age);
+			json.setStatus(1).setMessage("保存成功！");
+		} catch (Exception e) {
+			e.printStackTrace();
+			json.setStatus(0).setMessage("保存过程中，系统出现异常");
+		}
+		return json;
+	}
+
+	@MenuTag(code = "constant-age-edit", name = "修改年龄段", sequence = 2, type = 2, parentCode = "constant-age-index")
+	@RequestMapping(value = "/age-edit")
+	@ResponseBody
+	public JsonDTO ageedit(Age age) {
+		JsonDTO json = new JsonDTO();
+		try {
+			ageService.saveOrUpdate(age);
+			json.setStatus(1).setMessage("修改成功！");
+		} catch (Exception e) {
+			json.setStatus(0).setMessage("修改过程中，系统出现异常");
+		}
+		return json;
+	}
+
+	@MenuTag(code = "constant-age-delete", name = "修改年龄段", sequence = 2, type = 2, parentCode = "constant-age-index")
+	@RequestMapping(value = "{ageId}/age-delete")
+	@ResponseBody
+	public JsonDTO ageDelete(@PathVariable("ageId") Integer ageId) {
+		JsonDTO json = new JsonDTO();
+		try {
+			ageService.delete(ageId);
+			json.setStatus(1).setMessage("删除成功！");
+		} catch (Exception e) {
+			json.setStatus(0).setMessage("删除过程中，系统出现异常");
+		}
+		return json;
+	}
+
+	/*** 年龄段结束 */
+
+	/** 预算开始 */
+	@Resource
+	private BudgetService budgetService;
+
+	@MenuTag(code = "constant-budget-index", name = "预算管理", sequence = 12, type = 1)
+	@RequestMapping(value = "/budget-index")
+	public String budgetIndex(String operator, Map<String, Object> map) {
+		if (Constant.LIST.equals(operator)) {
+			List<Budget> budget = budgetService.all();
+			map.put(Constant.JSON, JsonUtils.object2json(budget));
+			return Constant.JSON;
+		}
+		return "admin/budget-list";
+	}
+
+	@MenuTag(code = "constant-budget-save", name = "添加预算", sequence = 1, type = 2, parentCode = "constant-budget-index")
+	@RequestMapping(value = "/budget-save")
+	@ResponseBody
+	public JsonDTO budgetSave(Budget budget) {
+		JsonDTO json = new JsonDTO();
+		try {
+			budgetService.saveOrUpdate(budget);
+			json.setStatus(1).setMessage("保存成功！");
+		} catch (Exception e) {
+			e.printStackTrace();
+			json.setStatus(0).setMessage("保存过程中，系统出现异常");
+		}
+		return json;
+	}
+
+	@MenuTag(code = "constant-budget-edit", name = "修改预算", sequence = 2, type = 2, parentCode = "constant-budget-index")
+	@RequestMapping(value = "/budget-edit")
+	@ResponseBody
+	public JsonDTO budgetEdit(Budget budget) {
+		JsonDTO json = new JsonDTO();
+		try {
+			budgetService.saveOrUpdate(budget);
+			json.setStatus(1).setMessage("修改成功！");
+		} catch (Exception e) {
+			json.setStatus(0).setMessage("修改过程中，系统出现异常");
+		}
+		return json;
+	}
+
+	@MenuTag(code = "constant-budget-delete", name = "删除预算", sequence = 2, type = 2, parentCode = "constant-budget-index")
+	@RequestMapping(value = "{budgetId}/age-delete")
+	@ResponseBody
+	public JsonDTO budgetDelete(@PathVariable("budgetId") Integer budgetId) {
+		JsonDTO json = new JsonDTO();
+		try {
+			budgetService.delete(budgetId);
+			json.setStatus(1).setMessage("删除成功！");
+		} catch (Exception e) {
+			json.setStatus(0).setMessage("删除过程中，系统出现异常");
+		}
+		return json;
+	}
+
+	/** 预算结束 */
+
+	/** 房型开始 */
+	@Resource
+	private HouseStyleService styleService;
+	
+	@Resource
+	private CompanyTypeService companyTypeService;
+
+	@MenuTag(code = "constant-style-index", name = "房型管理", sequence = 2, type = 1)
+	@RequestMapping(value = "/style-index")
+	public String styleIndex(String operator, Map<String, Object> map,Integer styleId) {
+		List<CompanyType> types=companyTypeService.all();
+		if (Constant.LIST.equals(operator)) {
+			List<Map<String,Object>> defaultSet = styleService.getDefaultPrice(types);
+			map.put(Constant.JSON, JsonUtils.object2json(defaultSet));
+			return Constant.JSON;
+		}else if("styleId".equals(operator)){
+			List<Map<String,Object>> companySet=styleService.getCompanyPriceByStyle(types, styleId);
+			map.put(Constant.JSON, JsonUtils.object2json(companySet));
+			return Constant.JSON;
+		}
+		map.put("types", types);
+		return "admin/house-style-list";
+	}
+
+	@MenuTag(code = "constant-style-save", name = "添加房型", sequence = 1, type = 2, parentCode = "constant-style-index")
+	@RequestMapping(value = "/style-save")
+	@ResponseBody
+	public JsonDTO styleSave(
+			@RequestBody HouseStyle houseStyle) {
+		JsonDTO json = new JsonDTO();
+		try {
+			styleService.saveOrUpdate(houseStyle);
+			json.setStatus(1).setMessage("保存成功！");
+		} catch (Exception e) {
+			e.printStackTrace();
+			json.setStatus(0).setMessage("保存过程中，系统出现异常");
+		}
+		return json;
+	}
+
+	@MenuTag(code = "constant-style-edit", name = "修改房型及价格", sequence = 2, type = 2, parentCode = "constant-style-index")
+	@RequestMapping(value = "/style-edit")
+	@ResponseBody
+	public JsonDTO styleEdit(@RequestBody HouseStyle houseStyle) {
+		JsonDTO json = new JsonDTO();
+		try {
+			styleService.saveOrUpdate(houseStyle);
+			json.setStatus(1).setMessage("修改成功！");
+		} catch (Exception e) {
+			e.printStackTrace();
+			json.setStatus(0).setMessage("修改过程中，系统出现异常");
+		}
+		return json;
+	}
+	@MenuTag(code = "constant-company-style-edit", name = "公司业务房型价格", sequence = 3, type = 2, parentCode = "constant-style-index")
+	@RequestMapping(value = "/company-style-edit")
+	@ResponseBody
+	public JsonDTO companyStyleEdit(@RequestBody HouseStyle houseStyle) {
+		JsonDTO json = new JsonDTO();
+		try {
+			styleService.saveOrUpdate(houseStyle);
+			json.setStatus(1).setMessage("修改成功！");
+		} catch (Exception e) {
+			e.printStackTrace();
+			json.setStatus(0).setMessage("修改过程中，系统出现异常");
+		}
+		return json;
+	}
+
+	@MenuTag(code = "constant-style-delete", name = "删除房型", sequence = 3, type = 2, parentCode = "constant-style-index")
+	@RequestMapping(value = "{styleId}/style-delete")
+	@ResponseBody
+	public JsonDTO styleDelete(@PathVariable("styleId") Integer styleId) {
+		JsonDTO json = new JsonDTO();
+		try {
+			styleService.delete(styleId);
+			json.setStatus(1).setMessage("删除成功！");
+		} catch (Exception e) {
+			json.setStatus(0).setMessage("删除过程中，系统出现异常");
+		}
+		return json;
+	}
+	
+	@MenuTag(code = "constant-company-style-edit", name = "修改公司业务房型价格", sequence = 3, type = 2, 
+			parentCode = "constant-company-style-edit")
+	@RequestMapping(value = "constant-company-style-edit")
+	@ResponseBody
+	public JsonDTO styleCompanyEdit(@PathVariable("styleId") Integer styleId) {
+		JsonDTO json = new JsonDTO();
+		try {
+			styleService.delete(styleId);
+			json.setStatus(1).setMessage("删除成功！");
+		} catch (Exception e) {
+			json.setStatus(0).setMessage("删除过程中，系统出现异常");
+		}
+		return json;
+	}
+
+	/** 房型结束 */
+
+	/** 短信开始 */
+	@Resource
+	private MessageTemplateService messageTemplateService;
+
+	@MenuTag(code = "message-template-index", name = "短信模板管理", sequence = 3, type = 1)
+	@RequestMapping(value = "/message-template-index")
+	public String messageTemplateIndex(String operator, Map<String, Object> map) {
+		if (Constant.LIST.equals(operator)) {
+			List<MessageTemplateDTO> budget = messageTemplateService.all();
+			map.put(Constant.JSON, JsonUtils.object2json(budget));
+			return Constant.JSON;
+		}
+		return "admin/message_template_index";
+	}
+
+	@MenuTag(code = "message-template-save", name = "添加短信模板", sequence = 1, type = 2, parentCode = "message-template-index")
+	@RequestMapping(value = "/message-template-save")
+	@ResponseBody
+	public JsonDTO messageTemplateSave(MessageTemplate messageTemplate, HttpServletRequest request) {
+		JsonDTO result = new JsonDTO();
+		messageTemplate.setCreateDate(new Date());
+		messageTemplate.setCreateUserId(getLoginAdminUser(request).getAdminUserId());
+		messageTemplate.setStatus(1);
+		messageTemplate.setIsDelete(0);
+		try {
+			messageTemplateService.saveOrUpdate(messageTemplate);
+			result.setStatus(1).setMessage("添加成功！");
+		} catch (Exception e) {
+			e.printStackTrace();
+			result.setStatus(0).setMessage("添加过程中，后台出现异常，请联系管理员");
+		}
+
+		return result;
+	}
+
+	@MenuTag(code = "message-template-update", name = "修改短信模板", sequence = 1, type = 3, parentCode = "message-template-index")
+	@RequestMapping(value = "/message-template-update")
+	@ResponseBody
+	public JsonDTO messageTemplateUpdate(MessageTemplate messageTemplate, HttpServletRequest request) {
+		JsonDTO result = new JsonDTO();
+		messageTemplate.setCreateDate(new Date());
+		messageTemplate.setCreateUserId(getLoginAdminUser(request).getAdminUserId());
+		messageTemplate.setStatus(1);
+		messageTemplate.setIsDelete(0);
+		try {
+			messageTemplateService.saveOrUpdate(messageTemplate);
+			result.setStatus(1).setMessage("修改成功！");
+		} catch (Exception e) {
+			e.printStackTrace();
+			result.setStatus(0).setMessage("修改过程中，后台出现异常，请联系管理员");
+		}
+
+		return result;
+	}
+
+	@MenuTag(code = "message-template-delete", name = "删除短信模版", sequence = 3, type = 2, parentCode = "message-template-index")
+	@RequestMapping(value = "message/{templateId}/delete")
+	@ResponseBody
+	public JsonDTO messageTemplateDelete(@PathVariable("templateId") Integer templateId) {
+		JsonDTO json = new JsonDTO();
+		try {
+			messageTemplateService.delete(templateId);
+			json.setStatus(1).setMessage("删除成功！");
+		} catch (Exception e) {
+			json.setStatus(0).setMessage("删除过程中，系统出现异常");
+		}
+		return json;
+	}
+
+	@MenuTag(code = "message-template-status", name = "短信状态管理", sequence = 4, type = 2, parentCode = "message-template-index")
+	@RequestMapping(value = "message/{templateId}/status")
+	@ResponseBody
+	public JsonDTO messageTemplateStatus(@PathVariable("templateId") Integer templateId) {
+		JsonDTO json = new JsonDTO();
+		MessageTemplateDTO temp = messageTemplateService.get(templateId);
+		String message = null;
+		Integer status = null;
+		if (temp != null) {
+			if (temp.getStatus() == 0) {
+				message = "激活成功！";
+				status = 1;
+			} else {
+				message = "冻结成功";
+				status = 0;
+			}
+			MessageTemplate param = new MessageTemplate();
+			param.setStatus(status);
+			param.setTemplateId(templateId);
+			try {
+				messageTemplateService.saveOrUpdate(param);
+				json.setStatus(1).setMessage(message);
+			} catch (Exception e) {
+				json.setStatus(0).setMessage("操作过程中，系统出现异常");
+			}
+		} else {
+			json.setStatus(0).setMessage("该短信不存在");
 		}
 		return json;
 	}

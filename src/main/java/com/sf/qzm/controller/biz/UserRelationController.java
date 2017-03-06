@@ -41,6 +41,7 @@ import com.sf.qzm.dto.biz.ChannelDTO;
 import com.sf.qzm.dto.biz.ChannelTypeDTO;
 import com.sf.qzm.dto.biz.CustomerDTO;
 import com.sf.qzm.dto.biz.CustomerHouseDTO;
+import com.sf.qzm.dto.biz.MessageTemplateDTO;
 import com.sf.qzm.service.AdminUserService;
 import com.sf.qzm.service.AgeService;
 import com.sf.qzm.service.BudgetService;
@@ -49,6 +50,7 @@ import com.sf.qzm.service.ChannelTypeService;
 import com.sf.qzm.service.CustomerHouseService;
 import com.sf.qzm.service.CustomerService;
 import com.sf.qzm.service.HouseStyleService;
+import com.sf.qzm.service.MessageTemplateService;
 import com.sf.qzm.service.ZoneService;
 import com.sf.qzm.util.manager.SendMsgResult;
 import com.sf.qzm.util.manager.SmsUtils;
@@ -91,7 +93,11 @@ public class UserRelationController extends BaseController{
 	@Resource
 	private AdminUserService adminUserService;
 	
-	@MenuTag(code = "sysCustomer-customer-index", name = "客户数据管理", sequence = 1, type = 1 )
+	@Resource
+	private MessageTemplateService templateService;
+	
+	public static final String CUSTOMER_INDEX_CODE="sysCustomer-customer-index";
+	@MenuTag(code = CUSTOMER_INDEX_CODE, name = "客户数据管理", sequence = 1, type = 1 )
 	@RequestMapping(value = "/customer-index")
 	public String customerIndex(String operator,
 			Customer customer,
@@ -139,18 +145,22 @@ public class UserRelationController extends BaseController{
 			}else{
 				CustomerHouse house=customerHouseService.get(houseId);
 
-				if(house!=null){
-					house.setStatus(1);//已发布
-					try {
-						String log=house.getLog()==null?"":house.getLog();
-						house.setLog(log+new SimpleDateFormat("yyyy-MM-dd HH:mm").
-								format(new Date())+" 由 "+getLoginAdminUser(request).getNickname()+" 从后台发布。&#13;");
-						customerHouseService.saveOrUpdate(house);
-						
-						json.setStatus(1).setMessage("发布成功！");
-					} catch (Exception e) {
-						e.printStackTrace();
-						json.setStatus(0).setMessage("更新失败");
+				if(house!=null){//发布前验证数据
+					if(house.noReadyMsg()==null){
+						house.setStatus(1);//已发布
+						try {
+							String log=house.getLog()==null?"":house.getLog();
+							house.setLog(log+new SimpleDateFormat("yyyy-MM-dd HH:mm").
+									format(new Date())+" 由 "+getLoginAdminUser(request).getNickname()+" 从后台发布。&#13;");
+							customerHouseService.saveOrUpdate(house);
+							json.setStatus(1).setMessage("发布成功！");
+							customerService.fresh();
+						} catch (Exception e) {
+							e.printStackTrace();
+							json.setStatus(0).setMessage("发布失败");
+						}
+					}else{
+						json.setStatus(0).setMessage(house.noReadyMsg());
 					}
 					
 				}else{
@@ -160,7 +170,34 @@ public class UserRelationController extends BaseController{
 			}
 			map.put(Constant.JSON, JsonUtils.object2json(json));
 			return Constant.JSON;
+		}else if("deleteHouse".equals(operator)){//删除
+		JsonDTO json=new JsonDTO();
+		if(houseId==null){
+			json.setStatus(0).setMessage("数据异常！请稍后再试");
+		}else{
+			CustomerHouse house=customerHouseService.get(houseId);
+			if(house!=null){//发布前验证数据
+					house.setIsDelete(1);//删除tag
+					try {
+						String log=house.getLog()==null?"":house.getLog();
+						house.setLog(log+new SimpleDateFormat("yyyy-MM-dd HH:mm").
+								format(new Date())+" 由 "+getLoginAdminUser(request).getNickname()+" 从后台删除。&#13;");
+						customerHouseService.saveOrUpdate(house);
+						customerService.fresh();
+						CustomerDTO newCu=customerService.get(customer.getCustomerId());
+						json.setStatus(1).setMessage("删除成功！").setData(newCu);
+					} catch (Exception e) {
+						e.printStackTrace();
+						json.setStatus(0).setMessage("删除失败");
+					}
+				
+			}else{
+				json.setStatus(0).setMessage("房产不存在！");
+			}
 		}
+		map.put(Constant.JSON, JsonUtils.object2json(json));
+		return Constant.JSON;
+	}
 		//查找所有用户渠道
 		List<ChannelDTO> channel=channelService.all();
 		map.put("channels", channel);
@@ -180,13 +217,136 @@ public class UserRelationController extends BaseController{
 		List<AdminUserDTO> users=adminUserService.getByPower("myWork-customer-index");//我的任务页面
 		map.put("services", users);
 		//加载所有短信模版
-		map.put("msgTemplate", SmsUtils.template);
+		map.put("msgTemplate", templateService.allLive());
 		
 		return "admin/customer-list";
 	}
 	
+	
+	@MenuTag(code = "sysCustomer-customer-download", name = "客户数据下载", sequence = 8, type = 2 ,parentCode=CUSTOMER_INDEX_CODE)
+	@RequestMapping(value = "/customer-download")
+	public String customerDownload(
+			Customer customer,
+			String key,
+			String sort,String direction,
+			HttpServletResponse response
+			) {
+		PageDTO<Customer> page=new PageDTO<Customer>();
+		page.setParam(customer);
+		if(sort==null){sort="createDate";}
+		page.setOrderBy(sort);
+		if(direction==null){direction="asc";}
+		page.setDirection(direction);
+		List<CustomerDTO> datas=customerService.download(page);
+		WritableWorkbook wwb = null;
+		String fileName = "客户数据.xls";
+		File file=new File(fileName);
+		try {
+			wwb = Workbook.createWorkbook(file);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		WritableSheet ws = wwb.createSheet("列表一", 0);// 建立工作簿
+		// 写表头
+		jxl.write.Label label1 = new jxl.write.Label(0, 0, "客户编号");
+		jxl.write.Label label2 = new jxl.write.Label(1, 0, "客户姓名");
+		jxl.write.Label label3 = new jxl.write.Label(2, 0, "手机");
+		jxl.write.Label label4 = new jxl.write.Label(3, 0, "状态");
+		jxl.write.Label label5 = new jxl.write.Label(4, 0, "备注");
+		jxl.write.Label label6 = new jxl.write.Label(5, 0, "渠道");
+		jxl.write.Label label7 = new jxl.write.Label(6, 0, "录入日期");
+		SimpleDateFormat format=new SimpleDateFormat("yyyy-MM-dd HH:mm");
+		try {
+			ws.addCell(label1);
+			ws.addCell(label2);
+			ws.addCell(label3);
+			ws.addCell(label4);
+			ws.addCell(label5);
+			ws.addCell(label6);
+			ws.addCell(label7);
+			for(int index=0;index<datas.size();index++){
+				CustomerDTO temp=datas.get(index);
+				Integer customerCode=temp.getCustomerCode();
+				String customerName=temp.getName();
+				String phone=temp.getPhone();
+				Integer status=temp.getStatus();//，1-待分配，2-等待回访，3-待跟进，4-关闭,5－已回访
+				String statusInfo="";
+				switch (status) {
+				case 1:
+					statusInfo="待分配";
+					break;
+				case 2:
+					statusInfo="等待回访";
+					break;
+				case 3:
+					statusInfo="待跟进";
+					break;
+				case 4:
+					statusInfo="关闭";
+					break;
+				case 5:
+					statusInfo="已回访";
+					break;
+				default:
+					statusInfo="待分配";
+					break;
+				}
+				
+				
+				String info=temp.getNextcallInfo();
+				ChannelDTO channel=temp.getChannel();
+				Long createDate=temp.getCreateDate();
+				
+				jxl.write.Label temp0 = new jxl.write.Label(0, index + 1,customerCode+"");//
+				jxl.write.Label temp1 = new jxl.write.Label(1, index + 1,customerName);// 
+//				jxl.write.Label temp2 = new jxl.write.Label(2, index + 1,StringUtils.hideMobile(phone));//
+				jxl.write.Label temp2 = new jxl.write.Label(2, index + 1,phone);//
+				jxl.write.Label temp3 = new jxl.write.Label(3, index + 1,statusInfo);//
+				jxl.write.Label temp4 = new jxl.write.Label(4, index + 1,info);//
+				jxl.write.Label temp5 = new jxl.write.Label(5, index + 1,channel.getName());//
+				jxl.write.Label temp6 = new jxl.write.Label(6, index + 1,format.format(new Date(createDate)));//
+				ws.addCell(temp0);
+				ws.addCell(temp1);
+				ws.addCell(temp2);
+				ws.addCell(temp3);
+				ws.addCell(temp4);
+				ws.addCell(temp5);
+				ws.addCell(temp6);
+			}
+			wwb.write();
+			// 关闭Excel工作薄对象
+			wwb.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		try {
+			String contentType = "application/x-download";
+			response.setContentType(contentType);
+			response.setHeader("Content-Disposition",
+					"attachment;filename=" + new String(fileName.getBytes("gb2312"), "ISO8859-1"));
+			
+			ServletOutputStream out = response.getOutputStream();
+			
+			byte[] bytes = new byte[0xffff];
+			InputStream is = new FileInputStream(new File(fileName));
+			int b = 0;
+			while ((b = is.read(bytes, 0, 0xffff)) > 0) {
+				out.write(bytes, 0, b);
+			}
+			
+			is.close();
+			out.flush();
+		} catch (Exception e) {
+		}finally {
+			if(file.exists()){
+				file.delete();
+			}
+		}
+		return null;
+	}
+	
 	//&#13;
-	@MenuTag(code = "sysCustomer-customer-save", name = "添加用户", sequence = 1, type = 2,parentCode="sysCustomer-customer-index")
+	@MenuTag(code = "sysCustomer-customer-save", name = "添加用户", sequence = 1, type = 2,parentCode=CUSTOMER_INDEX_CODE)
 	@RequestMapping(value = "/customer-save")
 	@ResponseBody
 	public JsonDTO customerSave(Customer customer,Map<String,Object> map,HttpServletRequest request) {
@@ -225,14 +385,7 @@ public class UserRelationController extends BaseController{
 		
 		return result;
 	}
-/**	
-	@MenuTag(code = "sysCustomer-customer-mobile-show", name = "显示号码", sequence = 5, type = 2,parentCode="sysCustomer-customer-index")
-	@RequestMapping(value = "/customer-mobile-show")
-	public void mobileShow(Customer customer,Map<String,Object> map,HttpServletRequest request) {
-		
-	}
-*/	
-	@MenuTag(code = "sysCustomer-customer-call", name = "呼叫客户", sequence = 3, type = 2,parentCode="sysCustomer-customer-index")
+	@MenuTag(code = "sysCustomer-customer-call", name = "呼叫客户", sequence = 3, type = 2,parentCode=CUSTOMER_INDEX_CODE)
 	@RequestMapping(value = "/customer-call")
 	@ResponseBody
 	public JsonDTO customerCall(Integer customerId,HttpServletRequest request) {
@@ -246,7 +399,7 @@ public class UserRelationController extends BaseController{
 		return json;
 	}
 	
-	@MenuTag(code = "sysCustomer-customer-status", name = "状态切换", sequence = 3, type = 2,parentCode="sysCustomer-customer-index")
+	@MenuTag(code = "sysCustomer-customer-status", name = "状态切换", sequence = 3, type = 2,parentCode=CUSTOMER_INDEX_CODE)
 	@RequestMapping(value = "/customer-status")
 	@ResponseBody
 	public JsonDTO customerStatus(Customer customer,Map<String,Object> map,HttpServletRequest request) {
@@ -268,7 +421,7 @@ public class UserRelationController extends BaseController{
 	 * 
 	 */
 	//&#13;
-	@MenuTag(code = "sysCustomer-customer-service", name = "分单", sequence = 1, type = 2,parentCode="sysCustomer-customer-index")
+	@MenuTag(code = "sysCustomer-customer-service", name = "分单", sequence = 1, type = 2,parentCode=CUSTOMER_INDEX_CODE)
 	@RequestMapping(value = "/customer-service")
 	@ResponseBody
 	public JsonDTO customerService(@RequestParam(required=true) Integer customerId,@RequestParam(required=true)Integer serviceId) {
@@ -291,32 +444,36 @@ public class UserRelationController extends BaseController{
 		}
 		return json;
 	}
-	@MenuTag(code = "sysCustomer-customer-msg", name = "发送短信", sequence = 3, type = 2,parentCode="sysCustomer-customer-index")
+	@MenuTag(code = "sysCustomer-customer-msg", name = "发送短信", sequence = 3, type = 2,parentCode=CUSTOMER_INDEX_CODE)
 	@RequestMapping(value = "/customer-msg")
 	@ResponseBody
 	public JsonDTO customerMsg(@RequestParam("customerId") Integer customerId
-			,@RequestParam("template") String template) {
+			,@RequestParam("templateId") Integer templateId) {
 		JsonDTO json=new JsonDTO();
 		json.setStatus(0).setMessage("短信发送失败");
 		CustomerDTO customerDTO=customerService.get(customerId);
-		if(customerDTO!=null){
-			SendMsgResult result=SmsUtils.sendMsg(customerDTO.getName(), customerDTO.getPhone(),template);
+		 MessageTemplateDTO templateDTO= templateService.get(templateId);
+		if(customerDTO!=null&&templateDTO!=null){
+			SendMsgResult result=SmsUtils.sendMsg(customerDTO.getName(), 
+					customerDTO.getPhone(),
+					templateDTO.getCode(),templateDTO.getSign());
 			if(result.getSuccess()==1){
 				json.setStatus(1).setMessage("短信发送成功！");
 			}else{
 				json.setStatus(0).setMessage(result.getMessage());
 			}
-		}
-		
+		}	
+	
 		return json;
 	}
-	@MenuTag(code = "sysCustomer-customer-batch-msg", name = "批量发送短信", sequence = 4, type = 2,parentCode="sysCustomer-customer-index")
+	@MenuTag(code = "sysCustomer-customer-batch-msg", name = "批量发送短信", sequence = 4, type = 2,parentCode=CUSTOMER_INDEX_CODE)
 	@RequestMapping(value = "/batch-customer-msg")
 	@ResponseBody
 	public JsonDTO customerBatchMsg(@RequestParam("ids[]") Integer[] ids
-			,@RequestParam("template") String template) {
+			,@RequestParam("templateId") Integer templateId) {
 		JsonDTO json=new JsonDTO();
-		if(ids.length<200){
+		 MessageTemplateDTO templateDTO= templateService.get(templateId);
+		if(ids.length<200&&templateDTO!=null){
 			List<CustomerDTO> customers=customerService.getByIds(ids);
 			StringBuilder phone=new StringBuilder();
 			for(CustomerDTO temp:customers){
@@ -326,7 +483,8 @@ public class UserRelationController extends BaseController{
 			if(phone.length()>1){
 				 phones=phone.toString().substring(0, phone.length()-1);
 			}
-			SendMsgResult result=SmsUtils.sendMsg("", phones, template);
+			SendMsgResult result=SmsUtils.sendMsg("", phones, 
+					templateDTO.getCode(),templateDTO.getSign());
 			if(result.getSuccess()==1){
 				json.setStatus(1).setMessage("短信发送成功！");
 			}else{
@@ -338,7 +496,7 @@ public class UserRelationController extends BaseController{
 		return json;
 	}
 	
-	@MenuTag(code = "sysCustomer-customer-batch-service", name = "批量分单", sequence = 1, type = 2,parentCode="sysCustomer-customer-index")
+	@MenuTag(code = "sysCustomer-customer-batch-service", name = "批量分单", sequence = 1, type = 2,parentCode=CUSTOMER_INDEX_CODE)
 	@RequestMapping(value = "/customer-batch-service")
 	@ResponseBody
 	public JsonDTO customerBatchService(@RequestParam(value="customerIds[]",required=true ) Integer[]customerIds,Integer serviceId) {
@@ -366,7 +524,7 @@ public class UserRelationController extends BaseController{
 	 * 	批量上传
 	 */
 	@MenuTag(code = "sysCustomer-batchUpload-customer-save", name = "批量添加", 
-			sequence = 1, type = 2,parentCode="sysCustomer-customer-index")
+			sequence = 1, type = 2,parentCode=CUSTOMER_INDEX_CODE)
 	@RequestMapping(value = "/customer-batchUpload-save")
 	public String batchUpload(Map<String,Object> map,HttpServletRequest request,HttpServletResponse response,
 			@RequestParam(required=true) String operator,
@@ -533,7 +691,26 @@ public class UserRelationController extends BaseController{
 					customerService.saveOrUpdate(customer);
 					customerId=customer.getCustomerId();
 				}else{
+					
 					customerId=old.getCustomerId();
+					
+					Customer customer=new Customer();
+					customer.setCustomerId(customerId);
+					customer.setName(usernames[index]);
+					if(phone[index]!=null&&phone[index].length()>50){
+						customer.setPhone(phone[index].substring(0, 50));
+					}else{
+						customer.setPhone(phone[index]);
+					}
+					customer.setCustomerCode(customerService.nextCustomerCode());
+					customer.setChannelId(channelId);
+					customer.setStatus(1);
+					customer.setCreateDate(new Date());
+					customer.setIntegration(0);
+					customer.setCreateUserId(getLoginAdminUser(request).getAdminUserId());
+					customer.setInfo("由"+getLoginAdminUser(request).getNickname()+"从后台批量导入.");
+					customerService.saveOrUpdate(customer);
+					
 				}
 				//保存房产
 				if(!StringUtils.isEmpty(houseLocation[index])){
@@ -556,7 +733,7 @@ public class UserRelationController extends BaseController{
 		return null;
 	}
 	
-	@MenuTag(code = "sysCustomer-customer-update", name = "更新用户", sequence = 1, type = 2,parentCode="sysCustomer-customer-index")
+	@MenuTag(code = "sysCustomer-customer-update", name = "更新用户", sequence = 1, type = 2,parentCode=CUSTOMER_INDEX_CODE)
 	@RequestMapping(value = "/customer-update")
 	@ResponseBody
 	public JsonDTO customerUpdate(@RequestBody Customer customer,Map<String,Object> map,HttpServletRequest request) {
@@ -591,6 +768,13 @@ public class UserRelationController extends BaseController{
 					temp.setCreateDate(new Date());
 					temp.setCreateUserId(getLoginAdminUser(request).getAdminUserId());
 					temp.setCustomerId(customer.getCustomerId());
+				}else{
+					Integer status=temp.getStatus();
+					if(status!=null&&status==1){
+						String log = oldHouse.getLog() == null ? "" : oldHouse.getLog();
+						temp.setLog(log + new SimpleDateFormat("yyyy-MM-dd HH:mm").format(new Date()) + " 由 "
+								+ getLoginAdminUser(request).getNickname() + " 从后台发布。&#13;");
+					}
 				}
 				customerHouseService.saveOrUpdate(temp);
 			}
@@ -598,7 +782,8 @@ public class UserRelationController extends BaseController{
 		
 		try {
 			customerService.saveOrUpdate(customer);
-			result.setStatus(1).setMessage("修改成功!");
+			CustomerDTO newCu=customerService.get(customer.getCustomerId());
+			result.setStatus(1).setMessage("修改成功!").setData(newCu);
 		} catch (Exception e) {
 			e.printStackTrace();
 			result.setStatus(0).setMessage("修改时候，系统出现异常！");
